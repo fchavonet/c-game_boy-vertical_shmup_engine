@@ -191,3 +191,31 @@ void enemy_render(void)
         }
     }
 }
+
+uint8_t enemy_touch(
+    int16_t x,
+    int16_t y,
+    uint8_t width,
+    uint8_t height)
+{
+    uint8_t i;
+
+    for (i = 0; i < ENEMY_COUNT; i++)
+    {
+        if (enemies[i].active)
+        {
+            if (
+                enemies[i].x < x + width &&
+                enemies[i].x + ENEMY_WIDTH > x &&
+                enemies[i].y < y + height &&
+                enemies[i].y + ENEMY_HEIGHT > y)
+            {
+                enemies[i].active = 0;
+
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
