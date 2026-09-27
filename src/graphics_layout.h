@@ -61,6 +61,9 @@
 #define GFX_BACKGROUND_SMALL_STAR_TILE_ID 153u
 #define GFX_BACKGROUND_LARGE_STAR_TILE_ID 154u
 
+#define GFX_PAUSE_FIRST_TILE_ID 155u
+#define GFX_PAUSE_TILE_COUNT 12u
+
 /*
  * Hardware sprite coordinate offsets.
  */

@@ -14,10 +14,14 @@
 #include "hud.h"
 #include "score.h"
 #include "background.h"
+#include "pause_indicator.h"
 
 void main(void)
 {
     uint8_t buttons;
+    uint8_t previous_buttons;
+    uint8_t pressed_buttons;
+    uint8_t paused;
 
     gotoxy(3, 8);
     printf("VERTICAL SHMUP");
@@ -47,6 +51,9 @@ void main(void)
             DMG_DARK_GRAY,
             DMG_BLACK);
 
+        previous_buttons = 0;
+        paused = 0;
+
         player_init();
         shots_init();
         enemy_init();
@@ -60,6 +67,7 @@ void main(void)
 
         hud_init();
         background_init();
+        pause_indicator_init();
 
         player_render();
         shots_render();
@@ -76,6 +84,31 @@ void main(void)
         while (player_is_alive() && !level_is_complete())
         {
             buttons = joypad();
+
+            pressed_buttons =
+                buttons & (uint8_t)~previous_buttons;
+
+            previous_buttons = buttons;
+
+            if (pressed_buttons & J_START)
+            {
+                if (paused)
+                {
+                    paused = 0;
+                }
+                else
+                {
+                    paused = 1;
+                }
+            }
+
+            pause_indicator_render(paused);
+
+            if (paused)
+            {
+                vsync();
+                continue;
+            }
 
             background_update();
 
