@@ -4,16 +4,27 @@
 #include "enemy.h"
 #include "shots.h"
 
+#define ENEMY_COUNT 6
+
 #define ENEMY_WIDTH 8
 #define ENEMY_HEIGHT 8
 
-#define ENEMY_SPRITE_ID 9
-#define ENEMY_TILE_ID 2
+#define ENEMY_SPEED 1
 
-#define ENEMY_RESPAWN_DELAY 60
+#define ENEMY_FIRST_SPRITE_ID 9
+#define ENEMY_TILE_ID 2
 
 #define SPRITE_OFFSET_X 8
 #define SPRITE_OFFSET_Y 16
+
+typedef struct
+{
+    uint8_t x;
+    uint8_t y;
+    uint8_t active;
+} Enemy;
+
+static Enemy enemies[ENEMY_COUNT];
 
 static const uint8_t enemy_tile[] = {
     0xFF, 0xFF,
@@ -25,62 +36,101 @@ static const uint8_t enemy_tile[] = {
     0xFF, 0xFF,
     0xFF, 0xFF};
 
-static uint8_t enemy_x;
-static uint8_t enemy_y;
-static uint8_t enemy_active;
-static uint8_t respawn_timer;
-
 void enemy_init(void)
 {
-    enemy_x = (SCREENWIDTH - ENEMY_WIDTH) / 2;
-    enemy_y = 24;
-    enemy_active = 1;
-    respawn_timer = 0;
+    uint8_t i;
+    uint8_t sprite_id;
 
     set_sprite_data(ENEMY_TILE_ID, 1, enemy_tile);
-    set_sprite_tile(ENEMY_SPRITE_ID, ENEMY_TILE_ID);
-    set_sprite_prop(ENEMY_SPRITE_ID, 0);
+
+    for (i = 0; i < ENEMY_COUNT; i++)
+    {
+        enemies[i].x = 0;
+        enemies[i].y = 0;
+        enemies[i].active = 0;
+
+        sprite_id = ENEMY_FIRST_SPRITE_ID + i;
+
+        set_sprite_tile(sprite_id, ENEMY_TILE_ID);
+        set_sprite_prop(sprite_id, 0);
+        move_sprite(sprite_id, 0, 0);
+    }
+}
+
+uint8_t enemy_spawn(uint8_t x, uint8_t y)
+{
+    uint8_t i;
+
+    if (x > SCREENWIDTH - ENEMY_WIDTH)
+    {
+        return 0;
+    }
+
+    if (y > SCREENHEIGHT - ENEMY_HEIGHT)
+    {
+        return 0;
+    }
+
+    for (i = 0; i < ENEMY_COUNT; i++)
+    {
+        if (!enemies[i].active)
+        {
+            enemies[i].x = x;
+            enemies[i].y = y;
+            enemies[i].active = 1;
+
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 void enemy_update(void)
 {
-    if (!enemy_active)
+    uint8_t i;
+
+    for (i = 0; i < ENEMY_COUNT; i++)
     {
-        if (respawn_timer > 0)
+        if (enemies[i].active)
         {
-            respawn_timer--;
+            enemies[i].y += ENEMY_SPEED;
+
+            if (enemies[i].y >= SCREENHEIGHT)
+            {
+                enemies[i].active = 0;
+            }
+            else if (shots_hit(
+                         enemies[i].x,
+                         enemies[i].y,
+                         ENEMY_WIDTH,
+                         ENEMY_HEIGHT))
+            {
+                enemies[i].active = 0;
+            }
         }
-
-        if (respawn_timer == 0)
-        {
-            enemy_active = 1;
-        }
-
-        return;
-    }
-
-    if (shots_hit(
-            enemy_x,
-            enemy_y,
-            ENEMY_WIDTH,
-            ENEMY_HEIGHT))
-    {
-        enemy_active = 0;
-        respawn_timer = ENEMY_RESPAWN_DELAY;
     }
 }
 
 void enemy_render(void)
 {
-    if (enemy_active)
+    uint8_t i;
+    uint8_t sprite_id;
+
+    for (i = 0; i < ENEMY_COUNT; i++)
     {
-        move_sprite(
-            ENEMY_SPRITE_ID,
-            enemy_x + SPRITE_OFFSET_X,
-            enemy_y + SPRITE_OFFSET_Y);
-    }
-    else
-    {
-        move_sprite(ENEMY_SPRITE_ID, 0, 0);
+        sprite_id = ENEMY_FIRST_SPRITE_ID + i;
+
+        if (enemies[i].active)
+        {
+            move_sprite(
+                sprite_id,
+                enemies[i].x + SPRITE_OFFSET_X,
+                enemies[i].y + SPRITE_OFFSET_Y);
+        }
+        else
+        {
+            move_sprite(sprite_id, 0, 0);
+        }
     }
 }

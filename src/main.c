@@ -11,6 +11,9 @@ void main(void)
 {
     uint8_t buttons;
 
+    uint8_t spawn_timer = 0;
+    uint8_t spawn_x = 24;
+
     gotoxy(3, 8);
     printf("VERTICAL SHMUP");
 
@@ -51,6 +54,26 @@ void main(void)
         shots_update();
         player_update(buttons);
         enemy_update();
+
+        if (spawn_timer > 0)
+        {
+            spawn_timer--;
+        }
+
+        if (spawn_timer == 0)
+        {
+            if (enemy_spawn(spawn_x, 0))
+            {
+                spawn_x += 24;
+
+                if (spawn_x > 120)
+                {
+                    spawn_x = 24;
+                }
+            }
+
+            spawn_timer = 45;
+        }
 
         player_render();
         shots_render();
