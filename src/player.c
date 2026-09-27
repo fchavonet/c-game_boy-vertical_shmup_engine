@@ -202,3 +202,8 @@ void player_render(void)
         (uint8_t)(player_x / POSITION_SCALE) + SPRITE_OFFSET_X,
         (uint8_t)(player_y / POSITION_SCALE) + SPRITE_OFFSET_Y);
 }
+
+uint8_t player_get_lives(void)
+{
+    return player_lives;
+}

@@ -3,6 +3,7 @@
 
 #include "enemy.h"
 #include "shots.h"
+#include "score.h"
 
 #define ENEMY_COUNT 6
 
@@ -17,6 +18,8 @@
 
 #define SPRITE_OFFSET_X 8
 #define SPRITE_OFFSET_Y 16
+
+#define ENEMY_SCORE_VALUE 100
 
 typedef struct
 {
@@ -165,6 +168,7 @@ void enemy_update(void)
                      ENEMY_HEIGHT))
         {
             enemies[i].active = 0;
+            score_add(ENEMY_SCORE_VALUE);
         }
     }
 }

@@ -9,5 +9,6 @@ void player_check_collision(void);
 void player_render(void);
 
 uint8_t player_is_alive(void);
+uint8_t player_get_lives(void);
 
 #endif
