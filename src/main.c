@@ -5,6 +5,7 @@
 
 #include "player.h"
 #include "shots.h"
+#include "enemy.h"
 
 void main(void)
 {
@@ -34,9 +35,11 @@ void main(void)
 
     player_init();
     shots_init();
+    enemy_init();
 
     player_render();
     shots_render();
+    enemy_render();
 
     SHOW_SPRITES;
     DISPLAY_ON;
@@ -47,9 +50,11 @@ void main(void)
 
         shots_update();
         player_update(buttons);
+        enemy_update();
 
         player_render();
         shots_render();
+        enemy_render();
 
         vsync();
     }

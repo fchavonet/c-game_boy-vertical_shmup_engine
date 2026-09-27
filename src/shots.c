@@ -6,6 +6,9 @@
 #define SHOT_SPEED 4
 #define SHOT_INTERVAL 10
 
+#define SHOT_WIDTH 2
+#define SHOT_HEIGHT 4
+
 #define SHOT_FIRST_SPRITE_ID 1
 #define SHOT_TILE_ID 1
 
@@ -125,4 +128,32 @@ void shots_render(void)
             move_sprite(sprite_id, 0, 0);
         }
     }
+}
+
+uint8_t shots_hit(
+    uint8_t x,
+    uint8_t y,
+    uint8_t width,
+    uint8_t height)
+{
+    uint8_t i;
+
+    for (i = 0; i < SHOT_COUNT; i++)
+    {
+        if (shots[i].active)
+        {
+            if (
+                shots[i].x < x + width &&
+                shots[i].x + SHOT_WIDTH > x &&
+                shots[i].y < y + height &&
+                shots[i].y + SHOT_HEIGHT > y)
+            {
+                shots[i].active = 0;
+
+                return 1;
+            }
+        }
+    }
+
+    return 0;
 }

@@ -8,4 +8,11 @@ void shots_update(void);
 void shots_spawn(uint8_t x, uint8_t y);
 void shots_render(void);
 
+uint8_t shots_hit(
+    uint8_t x,
+    uint8_t y,
+    uint8_t width,
+    uint8_t height
+);
+
 #endif
