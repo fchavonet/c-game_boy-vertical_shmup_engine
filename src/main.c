@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "player.h"
+#include "shots.h"
 
 void main(void)
 {
@@ -32,7 +33,10 @@ void main(void)
         DMG_BLACK);
 
     player_init();
+    shots_init();
+
     player_render();
+    shots_render();
 
     SHOW_SPRITES;
     DISPLAY_ON;
@@ -41,8 +45,11 @@ void main(void)
     {
         buttons = joypad();
 
+        shots_update();
         player_update(buttons);
+
         player_render();
+        shots_render();
 
         vsync();
     }

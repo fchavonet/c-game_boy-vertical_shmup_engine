@@ -1,4 +1,5 @@
 #include <gb/gb.h>
+#include "shots.h"
 
 #include "player.h"
 
@@ -57,6 +58,11 @@ void player_update(uint8_t buttons)
     if ((buttons & J_DOWN) && player_y < PLAYER_MAX_Y)
     {
         player_y++;
+    }
+
+    if (buttons & J_A)
+    {
+        shots_spawn(player_x + 3, player_y);
     }
 }
 
