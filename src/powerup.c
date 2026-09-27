@@ -1,5 +1,6 @@
 #include <gb/gb.h>
 
+#include "game_config.h"
 #include "powerup.h"
 
 #define POWERUP_WIDTH 8
@@ -65,18 +66,18 @@ void powerup_on_enemy_destroyed(int16_t x, int16_t y)
     {
         x = 0;
     }
-    else if (x > SCREENWIDTH - POWERUP_WIDTH)
+    else if (x > GAME_PLAYFIELD_WIDTH - POWERUP_WIDTH)
     {
-        x = SCREENWIDTH - POWERUP_WIDTH;
+        x = GAME_PLAYFIELD_WIDTH - POWERUP_WIDTH;
     }
 
     if (y < 0)
     {
         y = 0;
     }
-    else if (y > SCREENHEIGHT - POWERUP_HEIGHT)
+    else if (y > GAME_PLAYFIELD_HEIGHT - POWERUP_HEIGHT)
     {
-        y = SCREENHEIGHT - POWERUP_HEIGHT;
+        y = GAME_PLAYFIELD_HEIGHT - POWERUP_HEIGHT;
     }
 
     powerup_x = x;
@@ -99,7 +100,7 @@ void powerup_update(void)
         movement_timer = 0;
         powerup_y++;
 
-        if (powerup_y >= SCREENHEIGHT)
+        if (powerup_y >= GAME_PLAYFIELD_HEIGHT)
         {
             powerup_active = 0;
         }
@@ -124,7 +125,6 @@ uint8_t powerup_collect(
         powerup_y + POWERUP_HEIGHT > y)
     {
         powerup_active = 0;
-
         return 1;
     }
 

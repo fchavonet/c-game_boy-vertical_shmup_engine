@@ -1,12 +1,12 @@
 #include <gb/gb.h>
 
+#include "game_config.h"
 #include "player.h"
 #include "player_shots.h"
 #include "enemy.h"
 #include "enemy_shots.h"
 #include "powerup.h"
 #include "boss.h"
-#include "hud.h"
 
 #define PLAYER_WIDTH 8
 #define PLAYER_HEIGHT 8
@@ -18,16 +18,16 @@
     ((PLAYER_SPEED * 181L + 128) / 256)
 
 #define PLAYER_MAX_X \
-    ((SCREENWIDTH - PLAYER_WIDTH) * POSITION_SCALE)
+    ((GAME_PLAYFIELD_WIDTH - PLAYER_WIDTH) * POSITION_SCALE)
 
 #define PLAYER_MAX_Y \
-    ((HUD_TOP - PLAYER_HEIGHT) * POSITION_SCALE)
+    ((GAME_PLAYFIELD_HEIGHT - PLAYER_HEIGHT) * POSITION_SCALE)
 
 #define PLAYER_START_X \
-    (((SCREENWIDTH - PLAYER_WIDTH) / 2) * POSITION_SCALE)
+    (((GAME_PLAYFIELD_WIDTH - PLAYER_WIDTH) / 2) * POSITION_SCALE)
 
 #define PLAYER_START_Y \
-    ((HUD_TOP - PLAYER_HEIGHT - 16) * POSITION_SCALE)
+    ((GAME_PLAYFIELD_HEIGHT - PLAYER_HEIGHT - 16) * POSITION_SCALE)
 
 #define PLAYER_START_LIVES 3
 #define PLAYER_INVULNERABILITY_DURATION 120
@@ -236,7 +236,6 @@ void player_render(void)
     if (!player_is_alive())
     {
         move_sprite(PLAYER_SPRITE_ID, 0, 0);
-
         return;
     }
 
@@ -245,7 +244,6 @@ void player_render(void)
         (invulnerability_timer & 4))
     {
         move_sprite(PLAYER_SPRITE_ID, 0, 0);
-
         return;
     }
 

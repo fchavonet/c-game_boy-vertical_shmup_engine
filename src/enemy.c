@@ -1,6 +1,7 @@
 #include <gb/gb.h>
 #include <stdint.h>
 
+#include "game_config.h"
 #include "enemy.h"
 #include "player_shots.h"
 #include "score.h"
@@ -81,12 +82,12 @@ uint8_t enemy_spawn(
 {
     uint8_t i;
 
-    if (x > SCREENWIDTH - ENEMY_WIDTH)
+    if (x > GAME_PLAYFIELD_WIDTH - ENEMY_WIDTH)
     {
         return 0;
     }
 
-    if (y > SCREENHEIGHT - ENEMY_HEIGHT)
+    if (y > GAME_PLAYFIELD_HEIGHT - ENEMY_HEIGHT)
     {
         return 0;
     }
@@ -123,7 +124,6 @@ uint8_t enemy_spawn(
             }
 
             enemies[i].active = 1;
-
             return 1;
         }
     }
@@ -163,9 +163,9 @@ void enemy_update(void)
         }
 
         if (
-            enemies[i].y >= SCREENHEIGHT ||
+            enemies[i].y >= GAME_PLAYFIELD_HEIGHT ||
             enemies[i].x <= -ENEMY_WIDTH ||
-            enemies[i].x >= SCREENWIDTH)
+            enemies[i].x >= GAME_PLAYFIELD_WIDTH)
         {
             enemies[i].active = 0;
         }
@@ -247,7 +247,6 @@ uint8_t enemy_touch(
                 enemies[i].y + ENEMY_HEIGHT > y)
             {
                 enemies[i].active = 0;
-
                 return 1;
             }
         }

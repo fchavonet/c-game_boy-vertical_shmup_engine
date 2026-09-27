@@ -1,5 +1,6 @@
 #include <gb/gb.h>
 
+#include "game_config.h"
 #include "enemy_shots.h"
 
 #define ENEMY_SHOT_COUNT 6
@@ -63,9 +64,9 @@ void enemy_shots_spawn(int16_t x, int16_t y)
 
     if (
         x < 0 ||
-        x > SCREENWIDTH - ENEMY_SHOT_WIDTH ||
+        x > GAME_PLAYFIELD_WIDTH - ENEMY_SHOT_WIDTH ||
         y < 0 ||
-        y > SCREENHEIGHT - ENEMY_SHOT_HEIGHT)
+        y > GAME_PLAYFIELD_HEIGHT - ENEMY_SHOT_HEIGHT)
     {
         return;
     }
@@ -77,7 +78,6 @@ void enemy_shots_spawn(int16_t x, int16_t y)
             enemy_shots[i].x = x;
             enemy_shots[i].y = y;
             enemy_shots[i].active = 1;
-
             return;
         }
     }
@@ -93,7 +93,7 @@ void enemy_shots_update(void)
         {
             enemy_shots[i].y += ENEMY_SHOT_SPEED;
 
-            if (enemy_shots[i].y >= SCREENHEIGHT)
+            if (enemy_shots[i].y >= GAME_PLAYFIELD_HEIGHT)
             {
                 enemy_shots[i].active = 0;
             }
@@ -120,7 +120,6 @@ uint8_t enemy_shots_hit(
                 enemy_shots[i].y + ENEMY_SHOT_HEIGHT > y)
             {
                 enemy_shots[i].active = 0;
-
                 return 1;
             }
         }
