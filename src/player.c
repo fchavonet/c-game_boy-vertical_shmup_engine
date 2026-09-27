@@ -30,7 +30,9 @@
 #define PLAYER_START_Y \
     ((GAME_PLAYFIELD_HEIGHT - PLAYER_HEIGHT - 16) * POSITION_SCALE)
 
-#define PLAYER_START_LIVES 3
+#define PLAYER_MAX_LIVES 3
+#define PLAYER_START_LIVES PLAYER_MAX_LIVES
+
 #define PLAYER_INVULNERABILITY_DURATION 120
 #define PLAYER_MAX_WEAPON_LEVEL 3
 
@@ -52,8 +54,7 @@ static const uint8_t player_tile[] = {
     0x7E, 0x7E,
     0x7E, 0x7E,
     0xFF, 0xFF,
-    0xFF, 0xFF
-};
+    0xFF, 0xFF};
 
 static int16_t player_x;
 static int16_t player_y;
@@ -267,15 +268,13 @@ void player_render(void)
 
     if (player_is_destroying())
     {
-        elapsed = (uint8_t)(
-            PLAYER_DESTRUCTION_DURATION - destruction_timer);
+        elapsed = (uint8_t)(PLAYER_DESTRUCTION_DURATION - destruction_timer);
 
         if (elapsed < PLAYER_EXPLOSION_DURATION)
         {
             frame = elapsed / PLAYER_EXPLOSION_FRAME_DURATION;
 
-            tile_id = (uint8_t)(
-                GFX_EXPLOSION_FIRST_TILE_ID + frame);
+            tile_id = (uint8_t)(GFX_EXPLOSION_FIRST_TILE_ID + frame);
 
             set_sprite_tile(GFX_PLAYER_SPRITE_ID, tile_id);
 
@@ -319,14 +318,31 @@ uint8_t player_get_lives(void)
     return player_lives;
 }
 
+uint8_t player_add_life(void)
+{
+    /*
+     * Extra lives cannot revive a player with no lives left.
+     */
+    if (!player_is_alive())
+    {
+        return 0;
+    }
+
+    if (player_lives >= PLAYER_MAX_LIVES)
+    {
+        return 0;
+    }
+
+    player_lives++;
+    return 1;
+}
+
 uint8_t player_get_center_x(void)
 {
-    return (uint8_t)(
-        player_x / POSITION_SCALE + PLAYER_WIDTH / 2);
+    return (uint8_t)(player_x / POSITION_SCALE + PLAYER_WIDTH / 2);
 }
 
 uint8_t player_get_center_y(void)
 {
-    return (uint8_t)(
-        player_y / POSITION_SCALE + PLAYER_HEIGHT / 2);
+    return (uint8_t)(player_y / POSITION_SCALE + PLAYER_HEIGHT / 2);
 }
