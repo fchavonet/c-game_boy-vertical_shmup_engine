@@ -8,24 +8,22 @@ typedef struct
     uint16_t frame;
     uint8_t x;
     uint8_t y;
+    EnemyMovement movement;
 } SpawnEvent;
 
 static const SpawnEvent spawn_events[] = {
-    {60, 24, 0},
-    {90, 48, 0},
-    {120, 72, 0},
-    {150, 96, 0},
-    {180, 120, 0},
+    {60, 32, 0, ENEMY_MOVE_DOWN},
+    {60, 76, 0, ENEMY_MOVE_DOWN},
+    {60, 120, 0, ENEMY_MOVE_DOWN},
 
-    {300, 120, 0},
-    {330, 96, 0},
-    {360, 72, 0},
-    {390, 48, 0},
-    {420, 24, 0},
+    {240, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT},
+    {285, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT},
 
-    {540, 32, 0},
-    {540, 76, 0},
-    {540, 120, 0}};
+    {480, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT},
+    {525, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT},
+
+    {720, 32, 0, ENEMY_MOVE_ZIGZAG},
+    {720, 96, 0, ENEMY_MOVE_ZIGZAG}};
 
 #define SPAWN_EVENT_COUNT \
     (sizeof(spawn_events) / sizeof(spawn_events[0]))
@@ -55,7 +53,8 @@ void level_update(void)
 
         if (!enemy_spawn(
                 spawn_events[next_event].x,
-                spawn_events[next_event].y))
+                spawn_events[next_event].y,
+                spawn_events[next_event].movement))
         {
             return;
         }
