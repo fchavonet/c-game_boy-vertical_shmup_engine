@@ -5,8 +5,17 @@
 
 void enemy_shots_init(void);
 void enemy_shots_update(void);
-void enemy_shots_spawn(int16_t x, int16_t y);
 void enemy_shots_render(void);
+
+void enemy_shots_spawn(int16_t x, int16_t y);
+
+void enemy_shots_spawn_aimed(
+    int16_t x,
+    int16_t y,
+    int16_t target_x,
+    int16_t target_y);
+
+void enemy_shots_spawn_spread(int16_t x, int16_t y);
 
 uint8_t enemy_shots_hit(
     int16_t x,

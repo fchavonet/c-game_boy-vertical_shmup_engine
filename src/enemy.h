@@ -11,18 +11,30 @@ typedef enum
     ENEMY_MOVE_ZIGZAG
 } EnemyMovement;
 
+typedef enum
+{
+    ENEMY_SHOT_NONE,
+    ENEMY_SHOT_STRAIGHT,
+    ENEMY_SHOT_AIMED,
+    ENEMY_SHOT_SPREAD
+} EnemyShotMode;
+
 typedef struct
 {
     uint8_t start_hp;
     uint8_t speed;
+
+    EnemyShotMode shot_mode;
     uint8_t first_shot_delay;
     uint8_t shot_interval;
+
     uint16_t score_value;
     uint8_t tile_id;
 } EnemyDefinition;
 
 extern const EnemyDefinition enemy_standard;
 extern const EnemyDefinition enemy_resistant;
+extern const EnemyDefinition enemy_spread;
 
 void enemy_init(void);
 

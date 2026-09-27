@@ -4,6 +4,7 @@
 #include "game_config.h"
 #include "graphics_layout.h"
 #include "enemy.h"
+#include "player.h"
 #include "player_shots.h"
 #include "score.h"
 #include "enemy_shots.h"
@@ -37,29 +38,38 @@ typedef struct
 
 static Enemy enemies[ENEMY_COUNT];
 
-/*
- * Shared enemy definitions.
- */
-
 const EnemyDefinition enemy_standard = {
-    1,   /* Initial health */
-    1,   /* Movement speed */
-    45,  /* First shot delay */
-    60,  /* Shot interval */
+    1, /* Initial health */
+    1, /* Movement speed */
+
+    ENEMY_SHOT_NONE,
+    0, /* First shot delay: unused */
+    0, /* Shot interval: unused */
+
     100, /* Score value */
     GFX_ENEMY_TILE_ID};
 
 const EnemyDefinition enemy_resistant = {
-    3,   /* Initial health */
-    1,   /* Movement speed */
-    30,  /* First shot delay */
-    45,  /* Shot interval */
+    3, /* Initial health */
+    1, /* Movement speed */
+
+    ENEMY_SHOT_AIMED,
+    30, /* First shot delay */
+    45, /* Shot interval */
+
     250, /* Score value */
     GFX_ENEMY_RESISTANT_TILE_ID};
 
-/*
- * Placeholder graphics.
- */
+const EnemyDefinition enemy_spread = {
+    2, /* Initial health */
+    1, /* Movement speed */
+
+    ENEMY_SHOT_SPREAD,
+    45, /* First shot delay */
+    90, /* Shot interval */
+
+    200, /* Score value */
+    GFX_ENEMY_SPREAD_TILE_ID};
 
 static const uint8_t enemy_tile[] = {
     0xFF, 0xFF,
@@ -81,6 +91,76 @@ static const uint8_t resistant_tile[] = {
     0xFF, 0xFF,
     0xFF, 0xFF};
 
+static const uint8_t spread_tile[] = {
+    0x18, 0x18,
+    0x3C, 0x3C,
+    0x7E, 0x7E,
+    0xFF, 0xFF,
+    0xFF, 0xFF,
+    0x7E, 0x7E,
+    0x3C, 0x3C,
+    0x18, 0x18};
+
+static void enemy_update_shooting(Enemy *enemy)
+{
+    const EnemyDefinition *definition;
+
+    definition = enemy->definition;
+
+    if (definition->shot_mode == ENEMY_SHOT_NONE)
+    {
+        return;
+    }
+
+    if (definition->shot_interval == 0)
+    {
+        return;
+    }
+
+    if (enemy->shot_timer > 0)
+    {
+        enemy->shot_timer--;
+    }
+
+    if (enemy->shot_timer > 0)
+    {
+        return;
+    }
+
+    switch (definition->shot_mode)
+    {
+    case ENEMY_SHOT_STRAIGHT:
+        enemy_shots_spawn(
+            enemy->x + 2,
+            enemy->y + ENEMY_HEIGHT);
+        break;
+
+    case ENEMY_SHOT_AIMED:
+        if (
+            player_is_alive() &&
+            !player_is_destroying())
+        {
+            enemy_shots_spawn_aimed(
+                enemy->x + 2,
+                enemy->y + ENEMY_HEIGHT,
+                player_get_center_x(),
+                player_get_center_y());
+        }
+        break;
+
+    case ENEMY_SHOT_SPREAD:
+        enemy_shots_spawn_spread(
+            enemy->x + 2,
+            enemy->y + ENEMY_HEIGHT);
+        break;
+
+    default:
+        return;
+    }
+
+    enemy->shot_timer = definition->shot_interval;
+}
+
 void enemy_init(void)
 {
     uint8_t i;
@@ -95,6 +175,11 @@ void enemy_init(void)
         GFX_ENEMY_RESISTANT_TILE_ID,
         1,
         resistant_tile);
+
+    set_sprite_data(
+        GFX_ENEMY_SPREAD_TILE_ID,
+        1,
+        spread_tile);
 
     for (i = 0; i < ENEMY_COUNT; i++)
     {
@@ -153,6 +238,18 @@ uint8_t enemy_spawn(
     case ENEMY_MOVE_DIAGONAL_LEFT:
     case ENEMY_MOVE_DIAGONAL_RIGHT:
     case ENEMY_MOVE_ZIGZAG:
+        break;
+
+    default:
+        return 0;
+    }
+
+    switch (definition->shot_mode)
+    {
+    case ENEMY_SHOT_NONE:
+    case ENEMY_SHOT_STRAIGHT:
+    case ENEMY_SHOT_AIMED:
+    case ENEMY_SHOT_SPREAD:
         break;
 
     default:
@@ -246,9 +343,6 @@ void enemy_update(void)
             continue;
         }
 
-        /*
-         * Damage remains enabled during the hit flash.
-         */
         if (shots_hit(
                 enemies[i].x,
                 enemies[i].y,
@@ -278,27 +372,7 @@ void enemy_update(void)
                 ENEMY_HIT_FLASH_DURATION;
         }
 
-        /*
-         * A zero interval disables shooting.
-         */
-        if (definition->shot_interval == 0)
-        {
-            continue;
-        }
-
-        if (enemies[i].shot_timer > 0)
-        {
-            enemies[i].shot_timer--;
-        }
-
-        if (enemies[i].shot_timer == 0)
-        {
-            enemy_shots_spawn(
-                enemies[i].x + 2,
-                enemies[i].y + ENEMY_HEIGHT);
-
-            enemies[i].shot_timer = definition->shot_interval;
-        }
+        enemy_update_shooting(&enemies[i]);
     }
 }
 
@@ -317,10 +391,6 @@ void enemy_render(void)
             continue;
         }
 
-        /*
-         * Hide the sprite on alternating frames.
-         * The enemy remains active in the simulation.
-         */
         if (
             enemies[i].hit_flash_timer > 0 &&
             (enemies[i].hit_flash_timer & 1u) == 0u)

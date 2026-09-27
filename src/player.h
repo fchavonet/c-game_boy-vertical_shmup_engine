@@ -12,4 +12,7 @@ uint8_t player_is_alive(void);
 uint8_t player_is_destroying(void);
 uint8_t player_get_lives(void);
 
+uint8_t player_get_center_x(void);
+uint8_t player_get_center_y(void);
+
 #endif

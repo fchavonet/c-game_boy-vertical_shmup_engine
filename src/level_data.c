@@ -16,10 +16,10 @@ static const BossDefinition level_one_boss = {
 };
 
 static const SpawnEvent level_one_events[] = {
-    /* Standard enemies surrounding a resistant enemy */
+    /* Introduce the three enemy types */
     {60, 32, 0, ENEMY_MOVE_DOWN, &enemy_standard},
     {60, 76, 0, ENEMY_MOVE_DOWN, &enemy_resistant},
-    {60, 120, 0, ENEMY_MOVE_DOWN, &enemy_standard},
+    {60, 120, 0, ENEMY_MOVE_DOWN, &enemy_spread},
 
     /* Left diagonals */
     {240, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard},
@@ -30,7 +30,7 @@ static const SpawnEvent level_one_events[] = {
     {525, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard},
 
     /* Mixed zigzag pair */
-    {720, 32, 0, ENEMY_MOVE_ZIGZAG, &enemy_standard},
+    {720, 32, 0, ENEMY_MOVE_ZIGZAG, &enemy_spread},
     {720, 96, 0, ENEMY_MOVE_ZIGZAG, &enemy_resistant}};
 
 const LevelDefinition level_one = {
@@ -66,20 +66,20 @@ static const SpawnEvent level_two_events[] = {
     {110, 24, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard},
     {110, 128, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard},
 
-    /* Resistant enemies inside the formation */
+    /* Mixed straight formation */
     {300, 16, 0, ENEMY_MOVE_DOWN, &enemy_standard},
     {300, 56, 0, ENEMY_MOVE_DOWN, &enemy_resistant},
-    {300, 96, 0, ENEMY_MOVE_DOWN, &enemy_resistant},
+    {300, 96, 0, ENEMY_MOVE_DOWN, &enemy_spread},
     {300, 136, 0, ENEMY_MOVE_DOWN, &enemy_standard},
 
     /* Mixed zigzag formation */
     {540, 16, 0, ENEMY_MOVE_ZIGZAG, &enemy_standard},
-    {540, 64, 0, ENEMY_MOVE_ZIGZAG, &enemy_resistant},
+    {540, 64, 0, ENEMY_MOVE_ZIGZAG, &enemy_spread},
     {540, 112, 0, ENEMY_MOVE_ZIGZAG, &enemy_standard},
 
-    /* Final resistant pair */
+    /* Final armed pair */
     {780, 40, 0, ENEMY_MOVE_DOWN, &enemy_resistant},
-    {780, 112, 0, ENEMY_MOVE_DOWN, &enemy_resistant}};
+    {780, 112, 0, ENEMY_MOVE_DOWN, &enemy_spread}};
 
 const LevelDefinition level_two = {
     level_two_events,

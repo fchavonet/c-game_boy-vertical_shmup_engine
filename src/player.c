@@ -52,7 +52,8 @@ static const uint8_t player_tile[] = {
     0x7E, 0x7E,
     0x7E, 0x7E,
     0xFF, 0xFF,
-    0xFF, 0xFF};
+    0xFF, 0xFF
+};
 
 static int16_t player_x;
 static int16_t player_y;
@@ -93,9 +94,6 @@ void player_update(uint8_t buttons)
     int8_t direction_y = 0;
     int16_t speed = PLAYER_SPEED;
 
-    /*
-     * Finish the destruction sequence before accepting input.
-     */
     if (player_is_destroying())
     {
         destruction_timer--;
@@ -267,18 +265,17 @@ void player_render(void)
     uint8_t frame;
     uint8_t tile_id;
 
-    /*
-     * Display the explosion at the impact position.
-     */
     if (player_is_destroying())
     {
-        elapsed = (uint8_t)(PLAYER_DESTRUCTION_DURATION - destruction_timer);
+        elapsed = (uint8_t)(
+            PLAYER_DESTRUCTION_DURATION - destruction_timer);
 
         if (elapsed < PLAYER_EXPLOSION_DURATION)
         {
             frame = elapsed / PLAYER_EXPLOSION_FRAME_DURATION;
 
-            tile_id = (uint8_t)(GFX_EXPLOSION_FIRST_TILE_ID + frame);
+            tile_id = (uint8_t)(
+                GFX_EXPLOSION_FIRST_TILE_ID + frame);
 
             set_sprite_tile(GFX_PLAYER_SPRITE_ID, tile_id);
 
@@ -301,9 +298,6 @@ void player_render(void)
         return;
     }
 
-    /*
-     * Restore the ship graphic after the explosion.
-     */
     set_sprite_tile(GFX_PLAYER_SPRITE_ID, GFX_PLAYER_TILE_ID);
 
     if (
@@ -323,4 +317,16 @@ void player_render(void)
 uint8_t player_get_lives(void)
 {
     return player_lives;
+}
+
+uint8_t player_get_center_x(void)
+{
+    return (uint8_t)(
+        player_x / POSITION_SCALE + PLAYER_WIDTH / 2);
+}
+
+uint8_t player_get_center_y(void)
+{
+    return (uint8_t)(
+        player_y / POSITION_SCALE + PLAYER_HEIGHT / 2);
 }
