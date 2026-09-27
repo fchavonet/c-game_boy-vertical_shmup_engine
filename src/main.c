@@ -10,6 +10,7 @@
 #include "powerup.h"
 #include "boss.h"
 #include "level.h"
+#include "level_data.h"
 #include "hud.h"
 #include "score.h"
 #include "background.h"
@@ -52,7 +53,9 @@ void main(void)
         enemy_shots_init();
         powerup_init();
         boss_init();
-        level_init();
+
+        level_init(&level_one);
+
         score_init();
 
         hud_init();

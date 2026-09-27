@@ -21,6 +21,8 @@ uint8_t enemy_spawn(
 void enemy_update(void);
 void enemy_render(void);
 
+uint8_t enemy_is_clear(void);
+
 uint8_t enemy_touch(
     int16_t x,
     int16_t y,

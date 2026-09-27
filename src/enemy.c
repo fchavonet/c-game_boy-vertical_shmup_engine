@@ -223,6 +223,21 @@ void enemy_render(void)
     }
 }
 
+uint8_t enemy_is_clear(void)
+{
+    uint8_t i;
+
+    for (i = 0; i < ENEMY_COUNT; i++)
+    {
+        if (enemies[i].active)
+        {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 uint8_t enemy_touch(
     int16_t x,
     int16_t y,
