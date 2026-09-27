@@ -14,6 +14,7 @@ typedef struct
     uint8_t x;
     uint8_t y;
     EnemyMovement movement;
+    const EnemyDefinition *enemy;
 } SpawnEvent;
 
 typedef struct

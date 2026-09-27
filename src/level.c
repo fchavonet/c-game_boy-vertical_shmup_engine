@@ -45,7 +45,8 @@ void level_update(void)
         if (!enemy_spawn(
                 event->x,
                 event->y,
-                event->movement))
+                event->movement,
+                event->enemy))
         {
             return;
         }

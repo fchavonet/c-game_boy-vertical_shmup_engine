@@ -15,19 +15,20 @@
 #define ENEMY_WIDTH 8
 #define ENEMY_HEIGHT 8
 
-#define ENEMY_SPEED 1
 #define ENEMY_ZIGZAG_INTERVAL 32
-
-#define ENEMY_SCORE_VALUE 100
-
-#define ENEMY_FIRST_SHOT_DELAY 45
-#define ENEMY_SHOT_INTERVAL 60
+#define ENEMY_HIT_FLASH_DURATION 6
 
 typedef struct
 {
     int16_t x;
     int16_t y;
+
+    const EnemyDefinition *definition;
+
     uint8_t active;
+    uint8_t hp;
+    uint8_t hit_flash_timer;
+
     EnemyMovement movement;
     int8_t direction_x;
     uint8_t movement_timer;
@@ -35,6 +36,30 @@ typedef struct
 } Enemy;
 
 static Enemy enemies[ENEMY_COUNT];
+
+/*
+ * Shared enemy definitions.
+ */
+
+const EnemyDefinition enemy_standard = {
+    1,   /* Initial health */
+    1,   /* Movement speed */
+    45,  /* First shot delay */
+    60,  /* Shot interval */
+    100, /* Score value */
+    GFX_ENEMY_TILE_ID};
+
+const EnemyDefinition enemy_resistant = {
+    3,   /* Initial health */
+    1,   /* Movement speed */
+    30,  /* First shot delay */
+    45,  /* Shot interval */
+    250, /* Score value */
+    GFX_ENEMY_RESISTANT_TILE_ID};
+
+/*
+ * Placeholder graphics.
+ */
 
 static const uint8_t enemy_tile[] = {
     0xFF, 0xFF,
@@ -46,18 +71,39 @@ static const uint8_t enemy_tile[] = {
     0xFF, 0xFF,
     0xFF, 0xFF};
 
+static const uint8_t resistant_tile[] = {
+    0xFF, 0xFF,
+    0xFF, 0xFF,
+    0xC3, 0xC3,
+    0xC3, 0xC3,
+    0xC3, 0xC3,
+    0xC3, 0xC3,
+    0xFF, 0xFF,
+    0xFF, 0xFF};
+
 void enemy_init(void)
 {
     uint8_t i;
     uint8_t sprite_id;
 
-    set_sprite_data(GFX_ENEMY_TILE_ID, 1, enemy_tile);
+    set_sprite_data(
+        GFX_ENEMY_TILE_ID,
+        1,
+        enemy_tile);
+
+    set_sprite_data(
+        GFX_ENEMY_RESISTANT_TILE_ID,
+        1,
+        resistant_tile);
 
     for (i = 0; i < ENEMY_COUNT; i++)
     {
         enemies[i].x = 0;
         enemies[i].y = 0;
+        enemies[i].definition = 0;
         enemies[i].active = 0;
+        enemies[i].hp = 0;
+        enemies[i].hit_flash_timer = 0;
         enemies[i].movement = ENEMY_MOVE_DOWN;
         enemies[i].direction_x = 0;
         enemies[i].movement_timer = 0;
@@ -74,9 +120,22 @@ void enemy_init(void)
 uint8_t enemy_spawn(
     uint8_t x,
     uint8_t y,
-    EnemyMovement movement)
+    EnemyMovement movement,
+    const EnemyDefinition *definition)
 {
     uint8_t i;
+
+    if (definition == 0)
+    {
+        return 0;
+    }
+
+    if (
+        definition->start_hp == 0 ||
+        definition->speed == 0)
+    {
+        return 0;
+    }
 
     if (x > GAME_PLAYFIELD_WIDTH - ENEMY_WIDTH)
     {
@@ -88,8 +147,15 @@ uint8_t enemy_spawn(
         return 0;
     }
 
-    if (movement > ENEMY_MOVE_ZIGZAG)
+    switch (movement)
     {
+    case ENEMY_MOVE_DOWN:
+    case ENEMY_MOVE_DIAGONAL_LEFT:
+    case ENEMY_MOVE_DIAGONAL_RIGHT:
+    case ENEMY_MOVE_ZIGZAG:
+        break;
+
+    default:
         return 0;
     }
 
@@ -99,9 +165,14 @@ uint8_t enemy_spawn(
         {
             enemies[i].x = x;
             enemies[i].y = y;
+
+            enemies[i].definition = definition;
+            enemies[i].hp = definition->start_hp;
+            enemies[i].hit_flash_timer = 0;
+
             enemies[i].movement = movement;
             enemies[i].movement_timer = 0;
-            enemies[i].shot_timer = ENEMY_FIRST_SHOT_DELAY;
+            enemies[i].shot_timer = definition->first_shot_delay;
             enemies[i].direction_x = 0;
 
             switch (movement)
@@ -130,6 +201,7 @@ uint8_t enemy_spawn(
 void enemy_update(void)
 {
     uint8_t i;
+    const EnemyDefinition *definition;
 
     for (i = 0; i < ENEMY_COUNT; i++)
     {
@@ -138,10 +210,17 @@ void enemy_update(void)
             continue;
         }
 
-        enemies[i].y += ENEMY_SPEED;
+        definition = enemies[i].definition;
+
+        if (enemies[i].hit_flash_timer > 0)
+        {
+            enemies[i].hit_flash_timer--;
+        }
+
+        enemies[i].y += definition->speed;
 
         enemies[i].x +=
-            enemies[i].direction_x * ENEMY_SPEED;
+            enemies[i].direction_x * definition->speed;
 
         if (enemies[i].movement == ENEMY_MOVE_ZIGZAG)
         {
@@ -164,27 +243,45 @@ void enemy_update(void)
             enemies[i].x >= GAME_PLAYFIELD_WIDTH)
         {
             enemies[i].active = 0;
+            continue;
         }
-        else if (shots_hit(
-                     enemies[i].x,
-                     enemies[i].y,
-                     ENEMY_WIDTH,
-                     ENEMY_HEIGHT))
+
+        /*
+         * Damage remains enabled during the hit flash.
+         */
+        if (shots_hit(
+                enemies[i].x,
+                enemies[i].y,
+                ENEMY_WIDTH,
+                ENEMY_HEIGHT))
         {
-            enemies[i].active = 0;
+            enemies[i].hp--;
 
-            effects_spawn_explosion(
-                enemies[i].x,
-                enemies[i].y);
+            if (enemies[i].hp == 0)
+            {
+                enemies[i].active = 0;
 
-            score_add(ENEMY_SCORE_VALUE);
+                effects_spawn_explosion(
+                    enemies[i].x,
+                    enemies[i].y);
 
-            powerup_on_enemy_destroyed(
-                enemies[i].x,
-                enemies[i].y);
+                score_add(definition->score_value);
+
+                powerup_on_enemy_destroyed(
+                    enemies[i].x,
+                    enemies[i].y);
+
+                continue;
+            }
+
+            enemies[i].hit_flash_timer =
+                ENEMY_HIT_FLASH_DURATION;
         }
 
-        if (!enemies[i].active)
+        /*
+         * A zero interval disables shooting.
+         */
+        if (definition->shot_interval == 0)
         {
             continue;
         }
@@ -200,7 +297,7 @@ void enemy_update(void)
                 enemies[i].x + 2,
                 enemies[i].y + ENEMY_HEIGHT);
 
-            enemies[i].shot_timer = ENEMY_SHOT_INTERVAL;
+            enemies[i].shot_timer = definition->shot_interval;
         }
     }
 }
@@ -214,17 +311,32 @@ void enemy_render(void)
     {
         sprite_id = GFX_ENEMY_FIRST_SPRITE_ID + i;
 
-        if (enemies[i].active)
-        {
-            move_sprite(
-                sprite_id,
-                (uint8_t)(enemies[i].x + GFX_SPRITE_OFFSET_X),
-                (uint8_t)(enemies[i].y + GFX_SPRITE_OFFSET_Y));
-        }
-        else
+        if (!enemies[i].active)
         {
             move_sprite(sprite_id, 0, 0);
+            continue;
         }
+
+        /*
+         * Hide the sprite on alternating frames.
+         * The enemy remains active in the simulation.
+         */
+        if (
+            enemies[i].hit_flash_timer > 0 &&
+            (enemies[i].hit_flash_timer & 1u) == 0u)
+        {
+            move_sprite(sprite_id, 0, 0);
+            continue;
+        }
+
+        set_sprite_tile(
+            sprite_id,
+            enemies[i].definition->tile_id);
+
+        move_sprite(
+            sprite_id,
+            (uint8_t)(enemies[i].x + GFX_SPRITE_OFFSET_X),
+            (uint8_t)(enemies[i].y + GFX_SPRITE_OFFSET_Y));
     }
 }
 

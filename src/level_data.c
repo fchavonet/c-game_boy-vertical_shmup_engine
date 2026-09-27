@@ -16,18 +16,22 @@ static const BossDefinition level_one_boss = {
 };
 
 static const SpawnEvent level_one_events[] = {
-    {60, 32, 0, ENEMY_MOVE_DOWN},
-    {60, 76, 0, ENEMY_MOVE_DOWN},
-    {60, 120, 0, ENEMY_MOVE_DOWN},
+    /* Standard enemies surrounding a resistant enemy */
+    {60, 32, 0, ENEMY_MOVE_DOWN, &enemy_standard},
+    {60, 76, 0, ENEMY_MOVE_DOWN, &enemy_resistant},
+    {60, 120, 0, ENEMY_MOVE_DOWN, &enemy_standard},
 
-    {240, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT},
-    {285, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT},
+    /* Left diagonals */
+    {240, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard},
+    {285, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard},
 
-    {480, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT},
-    {525, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT},
+    /* Right diagonals */
+    {480, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard},
+    {525, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard},
 
-    {720, 32, 0, ENEMY_MOVE_ZIGZAG},
-    {720, 96, 0, ENEMY_MOVE_ZIGZAG}};
+    /* Mixed zigzag pair */
+    {720, 32, 0, ENEMY_MOVE_ZIGZAG, &enemy_standard},
+    {720, 96, 0, ENEMY_MOVE_ZIGZAG, &enemy_resistant}};
 
 const LevelDefinition level_one = {
     level_one_events,
@@ -56,26 +60,26 @@ static const BossDefinition level_two_boss = {
 
 static const SpawnEvent level_two_events[] = {
     /* Crossing diagonals */
-    {60, 24, 0, ENEMY_MOVE_DIAGONAL_RIGHT},
-    {60, 128, 0, ENEMY_MOVE_DIAGONAL_LEFT},
+    {60, 24, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard},
+    {60, 128, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard},
 
-    {110, 24, 0, ENEMY_MOVE_DIAGONAL_RIGHT},
-    {110, 128, 0, ENEMY_MOVE_DIAGONAL_LEFT},
+    {110, 24, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard},
+    {110, 128, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard},
 
-    /* Straight formation */
-    {300, 16, 0, ENEMY_MOVE_DOWN},
-    {300, 56, 0, ENEMY_MOVE_DOWN},
-    {300, 96, 0, ENEMY_MOVE_DOWN},
-    {300, 136, 0, ENEMY_MOVE_DOWN},
+    /* Resistant enemies inside the formation */
+    {300, 16, 0, ENEMY_MOVE_DOWN, &enemy_standard},
+    {300, 56, 0, ENEMY_MOVE_DOWN, &enemy_resistant},
+    {300, 96, 0, ENEMY_MOVE_DOWN, &enemy_resistant},
+    {300, 136, 0, ENEMY_MOVE_DOWN, &enemy_standard},
 
-    /* Zigzag formation */
-    {540, 16, 0, ENEMY_MOVE_ZIGZAG},
-    {540, 64, 0, ENEMY_MOVE_ZIGZAG},
-    {540, 112, 0, ENEMY_MOVE_ZIGZAG},
+    /* Mixed zigzag formation */
+    {540, 16, 0, ENEMY_MOVE_ZIGZAG, &enemy_standard},
+    {540, 64, 0, ENEMY_MOVE_ZIGZAG, &enemy_resistant},
+    {540, 112, 0, ENEMY_MOVE_ZIGZAG, &enemy_standard},
 
-    /* Final pair */
-    {780, 40, 0, ENEMY_MOVE_DOWN},
-    {780, 112, 0, ENEMY_MOVE_DOWN}};
+    /* Final resistant pair */
+    {780, 40, 0, ENEMY_MOVE_DOWN, &enemy_resistant},
+    {780, 112, 0, ENEMY_MOVE_DOWN, &enemy_resistant}};
 
 const LevelDefinition level_two = {
     level_two_events,
