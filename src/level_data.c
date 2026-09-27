@@ -1,6 +1,36 @@
 #include "level_data.h"
 
 /*
+ * Reusable movement paths.
+ *
+ * Each step contains:
+ * duration, horizontal direction, vertical direction,
+ * shooting permission.
+ */
+
+static const EnemyMovementStep attack_exit_left_steps[] = {
+    {32, 0, 1, 0},
+    {60, 0, 0, 1},
+    {120, -1, 1, 0}};
+
+static const EnemyPath attack_exit_left = {
+    attack_exit_left_steps,
+
+    sizeof(attack_exit_left_steps) /
+        sizeof(attack_exit_left_steps[0])};
+
+static const EnemyMovementStep attack_exit_right_steps[] = {
+    {32, 0, 1, 0},
+    {60, 0, 0, 1},
+    {120, 1, 1, 0}};
+
+static const EnemyPath attack_exit_right = {
+    attack_exit_right_steps,
+
+    sizeof(attack_exit_right_steps) /
+        sizeof(attack_exit_right_steps[0])};
+
+/*
  * Level one.
  */
 
@@ -16,22 +46,35 @@ static const BossDefinition level_one_boss = {
 };
 
 static const SpawnEvent level_one_events[] = {
-    /* Introduce the three enemy types */
-    {60, 32, 0, ENEMY_MOVE_DOWN, &enemy_standard},
-    {60, 76, 0, ENEMY_MOVE_DOWN, &enemy_resistant},
-    {60, 120, 0, ENEMY_MOVE_DOWN, &enemy_spread},
+    /* Compare both paths immediately */
+    {60, 32, 0, ENEMY_MOVE_DOWN, &enemy_standard, 0},
+    {60, 76, 0,
+     ENEMY_MOVE_SEQUENCE,
+     &enemy_resistant,
+     &attack_exit_left},
+    {60, 120, 0,
+     ENEMY_MOVE_SEQUENCE,
+     &enemy_spread,
+     &attack_exit_right},
 
     /* Left diagonals */
-    {240, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard},
-    {285, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard},
+    {240, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard, 0},
+    {285, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard, 0},
 
     /* Right diagonals */
-    {480, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard},
-    {525, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard},
+    {480, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard, 0},
+    {525, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard, 0},
 
-    /* Mixed zigzag pair */
-    {720, 32, 0, ENEMY_MOVE_ZIGZAG, &enemy_spread},
-    {720, 96, 0, ENEMY_MOVE_ZIGZAG, &enemy_resistant}};
+    /* Two attackers sharing the same timing */
+    {
+        720, 32, 0,
+        ENEMY_MOVE_SEQUENCE,
+        &enemy_spread,
+        &attack_exit_left},
+    {720, 96, 0,
+     ENEMY_MOVE_SEQUENCE,
+     &enemy_resistant,
+     &attack_exit_right}};
 
 const LevelDefinition level_one = {
     level_one_events,
@@ -60,26 +103,42 @@ static const BossDefinition level_two_boss = {
 
 static const SpawnEvent level_two_events[] = {
     /* Crossing diagonals */
-    {60, 24, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard},
-    {60, 128, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard},
+    {60, 24, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard, 0},
+    {60, 128, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard, 0},
 
-    {110, 24, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard},
-    {110, 128, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard},
+    {110, 24, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard, 0},
+    {110, 128, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard, 0},
 
-    /* Mixed straight formation */
-    {300, 16, 0, ENEMY_MOVE_DOWN, &enemy_standard},
-    {300, 56, 0, ENEMY_MOVE_DOWN, &enemy_resistant},
-    {300, 96, 0, ENEMY_MOVE_DOWN, &enemy_spread},
-    {300, 136, 0, ENEMY_MOVE_DOWN, &enemy_standard},
+    /* Attackers leave in opposite directions */
+    {300, 16, 0, ENEMY_MOVE_DOWN, &enemy_standard, 0},
+    {300, 56, 0,
+     ENEMY_MOVE_SEQUENCE,
+     &enemy_resistant,
+     &attack_exit_left},
+    {300, 96, 0,
+     ENEMY_MOVE_SEQUENCE,
+     &enemy_spread,
+     &attack_exit_right},
+    {300, 136, 0, ENEMY_MOVE_DOWN, &enemy_standard, 0},
 
-    /* Mixed zigzag formation */
-    {540, 16, 0, ENEMY_MOVE_ZIGZAG, &enemy_standard},
-    {540, 64, 0, ENEMY_MOVE_ZIGZAG, &enemy_spread},
-    {540, 112, 0, ENEMY_MOVE_ZIGZAG, &enemy_standard},
+    /* Stopping attacker and zigzag escorts */
+    {540, 16, 0, ENEMY_MOVE_ZIGZAG, &enemy_standard, 0},
+    {540, 64, 0,
+     ENEMY_MOVE_SEQUENCE,
+     &enemy_spread,
+     &attack_exit_right},
+    {540, 112, 0, ENEMY_MOVE_ZIGZAG, &enemy_standard, 0},
 
     /* Final armed pair */
-    {780, 40, 0, ENEMY_MOVE_DOWN, &enemy_resistant},
-    {780, 112, 0, ENEMY_MOVE_DOWN, &enemy_spread}};
+    {
+        780, 40, 0,
+        ENEMY_MOVE_SEQUENCE,
+        &enemy_resistant,
+        &attack_exit_left},
+    {780, 112, 0,
+     ENEMY_MOVE_SEQUENCE,
+     &enemy_spread,
+     &attack_exit_right}};
 
 const LevelDefinition level_two = {
     level_two_events,

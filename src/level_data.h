@@ -13,8 +13,10 @@ typedef struct
     uint16_t frame;
     uint8_t x;
     uint8_t y;
+
     EnemyMovement movement;
     const EnemyDefinition *enemy;
+    const EnemyPath *path;
 } SpawnEvent;
 
 typedef struct

@@ -46,7 +46,8 @@ void level_update(void)
                 event->x,
                 event->y,
                 event->movement,
-                event->enemy))
+                event->enemy,
+                event->path))
         {
             return;
         }
