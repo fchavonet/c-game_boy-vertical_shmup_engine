@@ -8,6 +8,7 @@
 #include "score.h"
 #include "enemy_shots.h"
 #include "powerup.h"
+#include "effects.h"
 
 #define ENEMY_COUNT GFX_ENEMY_SPRITE_COUNT
 
@@ -171,6 +172,10 @@ void enemy_update(void)
                      ENEMY_HEIGHT))
         {
             enemies[i].active = 0;
+
+            effects_spawn_explosion(
+                enemies[i].x,
+                enemies[i].y);
 
             score_add(ENEMY_SCORE_VALUE);
 

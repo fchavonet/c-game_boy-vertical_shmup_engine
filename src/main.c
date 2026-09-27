@@ -15,6 +15,7 @@
 #include "score.h"
 #include "background.h"
 #include "pause_indicator.h"
+#include "effects.h"
 
 void main(void)
 {
@@ -33,16 +34,10 @@ void main(void)
     waitpad(J_START);
     waitpadup();
 
-    /*
-     * A new campaign starts on each iteration.
-     */
     while (1)
     {
         level_index = 0;
 
-        /*
-         * Play the campaign levels in order.
-         */
         while (level_index < LEVEL_COUNT)
         {
             DISPLAY_OFF;
@@ -65,24 +60,18 @@ void main(void)
             previous_buttons = 0;
             paused = 0;
 
-            /*
-             * Reset persistent player state only
-             * when starting a new campaign.
-             */
             if (level_index == 0)
             {
                 player_init();
                 score_init();
             }
 
-            /*
-             * Reset the objects belonging to each level.
-             */
             shots_init();
             enemy_init();
             enemy_shots_init();
             powerup_init();
             boss_init();
+            effects_init();
 
             level_init(levels[level_index]);
 
@@ -96,16 +85,16 @@ void main(void)
             enemy_shots_render();
             powerup_render();
             boss_render();
+            effects_render();
             hud_render(player_get_lives(), score_get());
             background_render();
 
             SHOW_SPRITES;
             DISPLAY_ON;
 
-            /*
-             * Run the current level.
-             */
-            while (player_is_alive() && !level_is_complete())
+            while (
+                (player_is_alive() || player_is_destroying()) &&
+                (!level_is_complete() || player_is_destroying()))
             {
                 buttons = joypad();
 
@@ -135,6 +124,7 @@ void main(void)
                 }
 
                 background_update();
+                effects_update();
 
                 shots_update();
                 enemy_shots_update();
@@ -156,6 +146,7 @@ void main(void)
                 enemy_shots_render();
                 powerup_render();
                 boss_render();
+                effects_render();
                 hud_render(player_get_lives(), score_get());
 
                 vsync();
@@ -163,9 +154,6 @@ void main(void)
                 background_render();
             }
 
-            /*
-             * Show the result of the current level.
-             */
             DISPLAY_OFF;
 
             hud_hide();
@@ -201,10 +189,6 @@ void main(void)
             waitpad(J_START);
             waitpadup();
 
-            /*
-             * On defeat, leave the level loop.
-             * The outer loop starts a new campaign.
-             */
             if (!player_is_alive())
             {
                 break;

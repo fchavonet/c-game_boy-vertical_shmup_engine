@@ -19,11 +19,16 @@
 #define BOSS_HIT_FLASH_DURATION 6
 #define BOSS_SCORE_VALUE 1000
 
+#define BOSS_DESTRUCTION_DURATION 48
+#define BOSS_EXPLOSION_FRAME_DURATION 4u
+#define BOSS_EXPLOSION_PART_DELAY 3
+
 typedef enum
 {
     BOSS_WAITING,
     BOSS_ENTERING,
     BOSS_FIGHTING,
+    BOSS_DESTROYING,
     BOSS_DEFEATED
 } BossState;
 
@@ -39,6 +44,7 @@ static int8_t direction_x;
 static uint8_t boss_hp;
 static uint8_t shot_timer;
 static uint8_t hit_flash_timer;
+static uint8_t destruction_timer;
 
 static const uint8_t boss_tile[] = {
     0xFF, 0xFF,
@@ -65,6 +71,7 @@ void boss_init(void)
     boss_hp = 0;
     shot_timer = 0;
     hit_flash_timer = 0;
+    destruction_timer = 0;
 
     set_sprite_data(
         GFX_BOSS_FIRST_TILE_ID,
@@ -98,6 +105,7 @@ void boss_start(const BossDefinition *definition)
     boss_hp = boss_definition->start_hp;
     shot_timer = boss_definition->phase_one_shot_interval;
     hit_flash_timer = 0;
+    destruction_timer = 0;
 
     boss_state = BOSS_ENTERING;
 }
@@ -116,6 +124,22 @@ void boss_update(void)
         boss_state == BOSS_WAITING ||
         boss_state == BOSS_DEFEATED)
     {
+        return;
+    }
+
+    /*
+     * Finish the destruction sequence before completing
+     * the level.
+     */
+    if (boss_state == BOSS_DESTROYING)
+    {
+        destruction_timer++;
+
+        if (destruction_timer >= BOSS_DESTRUCTION_DURATION)
+        {
+            boss_state = BOSS_DEFEATED;
+        }
+
         return;
     }
 
@@ -148,7 +172,11 @@ void boss_update(void)
 
         if (boss_hp == 0)
         {
-            boss_state = BOSS_DEFEATED;
+            boss_state = BOSS_DESTROYING;
+
+            destruction_timer = 0;
+            hit_flash_timer = 0;
+
             score_add(BOSS_SCORE_VALUE);
             return;
         }
@@ -215,6 +243,10 @@ uint8_t boss_touch(
     uint8_t width,
     uint8_t height)
 {
+    /*
+     * A boss being destroyed can no longer hurt the player
+     * through direct contact.
+     */
     if (
         boss_state != BOSS_ENTERING &&
         boss_state != BOSS_FIGHTING)
@@ -238,6 +270,10 @@ void boss_render(void)
 {
     uint8_t i;
     uint8_t sprite_id;
+    uint8_t delay;
+    uint8_t age;
+    uint8_t frame;
+    uint8_t tile_id;
 
     int16_t part_x;
     int16_t part_y;
@@ -275,13 +311,42 @@ void boss_render(void)
         if (part_y <= -8 || part_y >= GAME_PLAYFIELD_HEIGHT)
         {
             move_sprite(sprite_id, 0, 0);
+            continue;
+        }
+
+        if (boss_state == BOSS_DESTROYING)
+        {
+            /*
+             * Start each explosion a little later
+             * than the previous one.
+             */
+            delay = i * BOSS_EXPLOSION_PART_DELAY;
+
+            if (destruction_timer < delay)
+            {
+                move_sprite(sprite_id, 0, 0);
+                continue;
+            }
+
+            age = destruction_timer - delay;
+
+            frame = (uint8_t)(
+                (age / BOSS_EXPLOSION_FRAME_DURATION) %
+                GFX_EXPLOSION_TILE_COUNT);
+
+            tile_id = (uint8_t)(
+                GFX_EXPLOSION_FIRST_TILE_ID + frame);
+
+            set_sprite_tile(sprite_id, tile_id);
         }
         else
         {
-            move_sprite(
-                sprite_id,
-                (uint8_t)(part_x + GFX_SPRITE_OFFSET_X),
-                (uint8_t)(part_y + GFX_SPRITE_OFFSET_Y));
+            set_sprite_tile(sprite_id, GFX_BOSS_FIRST_TILE_ID);
         }
+
+        move_sprite(
+            sprite_id,
+            (uint8_t)(part_x + GFX_SPRITE_OFFSET_X),
+            (uint8_t)(part_y + GFX_SPRITE_OFFSET_Y));
     }
 }

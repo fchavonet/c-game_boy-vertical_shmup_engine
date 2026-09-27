@@ -13,10 +13,6 @@
 #define GFX_ENEMY_FIRST_SPRITE_ID 9u
 #define GFX_ENEMY_SPRITE_COUNT 6u
 
-/*
- * Reserved slots previously used by the sprite HUD.
- */
-
 #define GFX_LEGACY_HUD_FIRST_SPRITE_ID 15u
 #define GFX_LEGACY_HUD_SPRITE_COUNT 8u
 
@@ -27,6 +23,9 @@
 
 #define GFX_BOSS_FIRST_SPRITE_ID 30u
 #define GFX_BOSS_SPRITE_COUNT 4u
+
+#define GFX_EFFECT_FIRST_SPRITE_ID 34u
+#define GFX_EFFECT_SPRITE_COUNT 4u
 
 /*
  * Sprite tile data.
@@ -40,6 +39,9 @@
 
 #define GFX_BOSS_FIRST_TILE_ID 16u
 #define GFX_BOSS_TILE_COUNT 1u
+
+#define GFX_EXPLOSION_FIRST_TILE_ID 17u
+#define GFX_EXPLOSION_TILE_COUNT 3u
 
 /*
  * Background and window tile data.
