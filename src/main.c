@@ -30,11 +30,12 @@ void main(void)
     {
         DISPLAY_OFF;
 
-        HIDE_BKG;
-        move_bkg(0, 0);
+        hud_hide();
 
-        HIDE_WIN;
+        HIDE_BKG;
         HIDE_SPRITES;
+
+        move_bkg(0, 0);
 
         SPRITES_8x8;
 
@@ -94,6 +95,7 @@ void main(void)
             vsync();
         }
 
+        hud_hide();
         HIDE_SPRITES;
 
         cls();

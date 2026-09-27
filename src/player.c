@@ -6,6 +6,7 @@
 #include "enemy_shots.h"
 #include "powerup.h"
 #include "boss.h"
+#include "hud.h"
 
 #define PLAYER_WIDTH 8
 #define PLAYER_HEIGHT 8
@@ -20,13 +21,13 @@
     ((SCREENWIDTH - PLAYER_WIDTH) * POSITION_SCALE)
 
 #define PLAYER_MAX_Y \
-    ((SCREENHEIGHT - PLAYER_HEIGHT) * POSITION_SCALE)
+    ((HUD_TOP - PLAYER_HEIGHT) * POSITION_SCALE)
 
 #define PLAYER_START_X \
     (((SCREENWIDTH - PLAYER_WIDTH) / 2) * POSITION_SCALE)
 
 #define PLAYER_START_Y \
-    ((SCREENHEIGHT - PLAYER_HEIGHT - 16) * POSITION_SCALE)
+    ((HUD_TOP - PLAYER_HEIGHT - 16) * POSITION_SCALE)
 
 #define PLAYER_START_LIVES 3
 #define PLAYER_INVULNERABILITY_DURATION 120
