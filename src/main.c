@@ -22,6 +22,7 @@ void main(void)
     uint8_t previous_buttons;
     uint8_t pressed_buttons;
     uint8_t paused;
+    uint8_t level_index;
 
     gotoxy(3, 8);
     printf("VERTICAL SHMUP");
@@ -32,99 +33,62 @@ void main(void)
     waitpad(J_START);
     waitpadup();
 
+    /*
+     * A new campaign starts on each iteration.
+     */
     while (1)
     {
-        DISPLAY_OFF;
+        level_index = 0;
 
-        hud_hide();
-
-        HIDE_BKG;
-        HIDE_SPRITES;
-
-        move_bkg(0, 0);
-
-        SPRITES_8x8;
-
-        OBP0_REG = DMG_PALETTE(
-            DMG_WHITE,
-            DMG_LITE_GRAY,
-            DMG_DARK_GRAY,
-            DMG_BLACK);
-
-        previous_buttons = 0;
-        paused = 0;
-
-        player_init();
-        shots_init();
-        enemy_init();
-        enemy_shots_init();
-        powerup_init();
-        boss_init();
-
-        level_init(&level_one);
-
-        score_init();
-
-        hud_init();
-        background_init();
-        pause_indicator_init();
-
-        player_render();
-        shots_render();
-        enemy_render();
-        enemy_shots_render();
-        powerup_render();
-        boss_render();
-        hud_render(player_get_lives(), score_get());
-        background_render();
-
-        SHOW_SPRITES;
-        DISPLAY_ON;
-
-        while (player_is_alive() && !level_is_complete())
+        /*
+         * Play the campaign levels in order.
+         */
+        while (level_index < LEVEL_COUNT)
         {
-            buttons = joypad();
+            DISPLAY_OFF;
 
-            pressed_buttons =
-                buttons & (uint8_t)~previous_buttons;
+            hud_hide();
 
-            previous_buttons = buttons;
+            HIDE_BKG;
+            HIDE_SPRITES;
 
-            if (pressed_buttons & J_START)
+            move_bkg(0, 0);
+
+            SPRITES_8x8;
+
+            OBP0_REG = DMG_PALETTE(
+                DMG_WHITE,
+                DMG_LITE_GRAY,
+                DMG_DARK_GRAY,
+                DMG_BLACK);
+
+            previous_buttons = 0;
+            paused = 0;
+
+            /*
+             * Reset persistent player state only
+             * when starting a new campaign.
+             */
+            if (level_index == 0)
             {
-                if (paused)
-                {
-                    paused = 0;
-                }
-                else
-                {
-                    paused = 1;
-                }
+                player_init();
+                score_init();
             }
 
-            pause_indicator_render(paused);
+            /*
+             * Reset the objects belonging to each level.
+             */
+            shots_init();
+            enemy_init();
+            enemy_shots_init();
+            powerup_init();
+            boss_init();
 
-            if (paused)
-            {
-                vsync();
-                continue;
-            }
+            level_init(levels[level_index]);
 
-            background_update();
-
-            shots_update();
-            enemy_shots_update();
-            powerup_update();
-
-            player_update(buttons);
-            enemy_update();
-            boss_update();
-
-            if (!level_is_complete())
-            {
-                player_check_collision();
-                level_update();
-            }
+            hud_init();
+            background_init();
+            pause_indicator_init();
 
             player_render();
             shots_render();
@@ -133,40 +97,120 @@ void main(void)
             powerup_render();
             boss_render();
             hud_render(player_get_lives(), score_get());
-
-            vsync();
-
             background_render();
+
+            SHOW_SPRITES;
+            DISPLAY_ON;
+
+            /*
+             * Run the current level.
+             */
+            while (player_is_alive() && !level_is_complete())
+            {
+                buttons = joypad();
+
+                pressed_buttons =
+                    buttons & (uint8_t)~previous_buttons;
+
+                previous_buttons = buttons;
+
+                if (pressed_buttons & J_START)
+                {
+                    if (paused)
+                    {
+                        paused = 0;
+                    }
+                    else
+                    {
+                        paused = 1;
+                    }
+                }
+
+                pause_indicator_render(paused);
+
+                if (paused)
+                {
+                    vsync();
+                    continue;
+                }
+
+                background_update();
+
+                shots_update();
+                enemy_shots_update();
+                powerup_update();
+
+                player_update(buttons);
+                enemy_update();
+                boss_update();
+
+                if (!level_is_complete())
+                {
+                    player_check_collision();
+                    level_update();
+                }
+
+                player_render();
+                shots_render();
+                enemy_render();
+                enemy_shots_render();
+                powerup_render();
+                boss_render();
+                hud_render(player_get_lives(), score_get());
+
+                vsync();
+
+                background_render();
+            }
+
+            /*
+             * Show the result of the current level.
+             */
+            DISPLAY_OFF;
+
+            hud_hide();
+            HIDE_SPRITES;
+
+            move_bkg(0, 0);
+
+            cls();
+
+            if (!player_is_alive())
+            {
+                gotoxy(5, 7);
+                printf("GAME OVER!");
+            }
+            else if (level_index == LEVEL_COUNT - 1)
+            {
+                gotoxy(5, 7);
+                printf("ALL CLEAR!");
+            }
+            else
+            {
+                gotoxy(4, 7);
+                printf("STAGE CLEAR!");
+            }
+
+            gotoxy(4, 9);
+            printf("PRESS START...");
+
+            SHOW_BKG;
+            DISPLAY_ON;
+
+            waitpadup();
+            waitpad(J_START);
+            waitpadup();
+
+            /*
+             * On defeat, leave the level loop.
+             * The outer loop starts a new campaign.
+             */
+            if (!player_is_alive())
+            {
+                break;
+            }
+
+            level_index++;
         }
-
-        DISPLAY_OFF;
-
-        hud_hide();
-        HIDE_SPRITES;
-
-        move_bkg(0, 0);
-
-        cls();
-
-        if (level_is_complete())
-        {
-            gotoxy(4, 7);
-            printf("STAGE CLEAR!");
-        }
-        else
-        {
-            gotoxy(5, 7);
-            printf("GAME OVER!");
-        }
-
-        gotoxy(4, 9);
-        printf("PRESS START...");
-
-        SHOW_BKG;
-        DISPLAY_ON;
-
-        waitpadup();
-        waitpad(J_START);
-        waitpadup();
     }
 }

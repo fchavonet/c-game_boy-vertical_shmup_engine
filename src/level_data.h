@@ -6,6 +6,8 @@
 #include "enemy.h"
 #include "boss.h"
 
+#define LEVEL_COUNT 2
+
 typedef struct
 {
     uint16_t frame;
@@ -24,5 +26,8 @@ typedef struct
 } LevelDefinition;
 
 extern const LevelDefinition level_one;
+extern const LevelDefinition level_two;
+
+extern const LevelDefinition *const levels[LEVEL_COUNT];
 
 #endif
