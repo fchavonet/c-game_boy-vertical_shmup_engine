@@ -1,13 +1,19 @@
 #include <gb/gb.h>
-#include "shots.h"
 
 #include "player.h"
+#include "shots.h"
 
 #define PLAYER_WIDTH 8
 #define PLAYER_HEIGHT 8
 
-#define PLAYER_MAX_X (SCREENWIDTH - PLAYER_WIDTH)
-#define PLAYER_MAX_Y (SCREENHEIGHT - PLAYER_HEIGHT)
+#define POSITION_SCALE 16
+
+#define PLAYER_SPEED 24
+#define PLAYER_DIAGONAL_SPEED ((PLAYER_SPEED * 181L + 128) / 256)
+
+#define PLAYER_MAX_X ((SCREENWIDTH - PLAYER_WIDTH) * POSITION_SCALE)
+
+#define PLAYER_MAX_Y ((SCREENHEIGHT - PLAYER_HEIGHT) * POSITION_SCALE)
 
 #define PLAYER_SPRITE_ID 0
 #define PLAYER_TILE_ID 0
@@ -25,13 +31,16 @@ static const uint8_t player_tile[] = {
     0xFF, 0xFF,
     0xFF, 0xFF};
 
-static uint8_t player_x;
-static uint8_t player_y;
+static int16_t player_x;
+static int16_t player_y;
 
 void player_init(void)
 {
-    player_x = (SCREENWIDTH - PLAYER_WIDTH) / 2;
-    player_y = SCREENHEIGHT - PLAYER_HEIGHT - 16;
+    player_x =
+        ((SCREENWIDTH - PLAYER_WIDTH) / 2) * POSITION_SCALE;
+
+    player_y =
+        (SCREENHEIGHT - PLAYER_HEIGHT - 16) * POSITION_SCALE;
 
     set_sprite_data(PLAYER_TILE_ID, 1, player_tile);
     set_sprite_tile(PLAYER_SPRITE_ID, PLAYER_TILE_ID);
@@ -40,29 +49,76 @@ void player_init(void)
 
 void player_update(uint8_t buttons)
 {
-    if ((buttons & J_LEFT) && player_x > 0)
+    int8_t direction_x = 0;
+    int8_t direction_y = 0;
+    int16_t speed = PLAYER_SPEED;
+
+    if (buttons & J_LEFT)
     {
-        player_x--;
+        direction_x--;
     }
 
-    if ((buttons & J_RIGHT) && player_x < PLAYER_MAX_X)
+    if (buttons & J_RIGHT)
     {
-        player_x++;
+        direction_x++;
     }
 
-    if ((buttons & J_UP) && player_y > 0)
+    if (buttons & J_UP)
     {
-        player_y--;
+        direction_y--;
     }
 
-    if ((buttons & J_DOWN) && player_y < PLAYER_MAX_Y)
+    if (buttons & J_DOWN)
     {
-        player_y++;
+        direction_y++;
+    }
+
+    if (direction_x != 0 && direction_y != 0)
+    {
+        speed = PLAYER_DIAGONAL_SPEED;
+    }
+
+    if (direction_x < 0)
+    {
+        player_x -= speed;
+    }
+    else if (direction_x > 0)
+    {
+        player_x += speed;
+    }
+
+    if (direction_y < 0)
+    {
+        player_y -= speed;
+    }
+    else if (direction_y > 0)
+    {
+        player_y += speed;
+    }
+
+    if (player_x < 0)
+    {
+        player_x = 0;
+    }
+    else if (player_x > PLAYER_MAX_X)
+    {
+        player_x = PLAYER_MAX_X;
+    }
+
+    if (player_y < 0)
+    {
+        player_y = 0;
+    }
+    else if (player_y > PLAYER_MAX_Y)
+    {
+        player_y = PLAYER_MAX_Y;
     }
 
     if (buttons & J_A)
     {
-        shots_spawn(player_x + 3, player_y);
+        shots_spawn(
+            (uint8_t)(player_x / POSITION_SCALE) + 3,
+            (uint8_t)(player_y / POSITION_SCALE));
     }
 }
 
@@ -70,6 +126,6 @@ void player_render(void)
 {
     move_sprite(
         PLAYER_SPRITE_ID,
-        player_x + SPRITE_OFFSET_X,
-        player_y + SPRITE_OFFSET_Y);
+        (uint8_t)(player_x / POSITION_SCALE) + SPRITE_OFFSET_X,
+        (uint8_t)(player_y / POSITION_SCALE) + SPRITE_OFFSET_Y);
 }
