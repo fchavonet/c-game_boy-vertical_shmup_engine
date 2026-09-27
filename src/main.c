@@ -12,6 +12,7 @@
 #include "level.h"
 #include "hud.h"
 #include "score.h"
+#include "background.h"
 
 void main(void)
 {
@@ -53,7 +54,9 @@ void main(void)
         boss_init();
         level_init();
         score_init();
+
         hud_init();
+        background_init();
 
         player_render();
         shots_render();
@@ -62,6 +65,7 @@ void main(void)
         powerup_render();
         boss_render();
         hud_render(player_get_lives(), score_get());
+        background_render();
 
         SHOW_SPRITES;
         DISPLAY_ON;
@@ -69,6 +73,8 @@ void main(void)
         while (player_is_alive() && !level_is_complete())
         {
             buttons = joypad();
+
+            background_update();
 
             shots_update();
             enemy_shots_update();
@@ -93,10 +99,16 @@ void main(void)
             hud_render(player_get_lives(), score_get());
 
             vsync();
+
+            background_render();
         }
+
+        DISPLAY_OFF;
 
         hud_hide();
         HIDE_SPRITES;
+
+        move_bkg(0, 0);
 
         cls();
 
@@ -115,6 +127,7 @@ void main(void)
         printf("PRESS START...");
 
         SHOW_BKG;
+        DISPLAY_ON;
 
         waitpadup();
         waitpad(J_START);
