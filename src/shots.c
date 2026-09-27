@@ -25,6 +25,11 @@ typedef struct
 static Shot shots[SHOT_COUNT];
 static uint8_t cooldown;
 
+static const uint8_t shot_offsets[3][3] = {
+    {3, 0, 0},
+    {0, 6, 0},
+    {0, 3, 6}};
+
 static const uint8_t shot_tile[] = {
     0xC0, 0xC0,
     0xC0, 0xC0,
@@ -83,11 +88,21 @@ void shots_update(void)
     }
 }
 
-void shots_spawn(uint8_t x, uint8_t y)
+void shots_spawn(
+    uint8_t x,
+    uint8_t y,
+    uint8_t weapon_level)
 {
     uint8_t i;
+    uint8_t available = 0;
+    uint8_t created = 0;
 
     if (cooldown > 0)
+    {
+        return;
+    }
+
+    if (weapon_level < 1 || weapon_level > 3)
     {
         return;
     }
@@ -96,15 +111,35 @@ void shots_spawn(uint8_t x, uint8_t y)
     {
         if (!shots[i].active)
         {
-            shots[i].x = x;
+            available++;
+        }
+    }
+
+    if (available < weapon_level)
+    {
+        return;
+    }
+
+    for (i = 0; i < SHOT_COUNT; i++)
+    {
+        if (!shots[i].active)
+        {
+            shots[i].x =
+                x + shot_offsets[weapon_level - 1][created];
+
             shots[i].y = y;
             shots[i].active = 1;
 
-            cooldown = SHOT_INTERVAL;
+            created++;
 
-            return;
+            if (created == weapon_level)
+            {
+                break;
+            }
         }
     }
+
+    cooldown = SHOT_INTERVAL;
 }
 
 void shots_render(void)

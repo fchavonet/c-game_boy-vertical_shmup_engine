@@ -4,6 +4,7 @@
 #include "shots.h"
 #include "enemy.h"
 #include "enemy_shots.h"
+#include "powerup.h"
 
 #define PLAYER_WIDTH 8
 #define PLAYER_HEIGHT 8
@@ -28,6 +29,7 @@
 
 #define PLAYER_START_LIVES 3
 #define PLAYER_INVULNERABILITY_DURATION 120
+#define PLAYER_MAX_WEAPON_LEVEL 3
 
 #define PLAYER_SPRITE_ID 0
 #define PLAYER_TILE_ID 0
@@ -50,6 +52,7 @@ static int16_t player_y;
 
 static uint8_t player_lives;
 static uint8_t invulnerability_timer;
+static uint8_t weapon_level;
 
 void player_init(void)
 {
@@ -58,6 +61,7 @@ void player_init(void)
 
     player_lives = PLAYER_START_LIVES;
     invulnerability_timer = 0;
+    weapon_level = 1;
 
     set_sprite_data(PLAYER_TILE_ID, 1, player_tile);
     set_sprite_tile(PLAYER_SPRITE_ID, PLAYER_TILE_ID);
@@ -146,11 +150,24 @@ void player_update(uint8_t buttons)
         player_y = PLAYER_MAX_Y;
     }
 
+    if (powerup_collect(
+            player_x / POSITION_SCALE,
+            player_y / POSITION_SCALE,
+            PLAYER_WIDTH,
+            PLAYER_HEIGHT))
+    {
+        if (weapon_level < PLAYER_MAX_WEAPON_LEVEL)
+        {
+            weapon_level++;
+        }
+    }
+
     if (buttons & J_A)
     {
         shots_spawn(
-            (uint8_t)(player_x / POSITION_SCALE) + 3,
-            (uint8_t)(player_y / POSITION_SCALE));
+            (uint8_t)(player_x / POSITION_SCALE),
+            (uint8_t)(player_y / POSITION_SCALE),
+            weapon_level);
     }
 }
 
@@ -186,6 +203,11 @@ void player_check_collision(void)
     if (hit)
     {
         player_lives--;
+
+        if (weapon_level > 1)
+        {
+            weapon_level--;
+        }
 
         if (player_is_alive())
         {

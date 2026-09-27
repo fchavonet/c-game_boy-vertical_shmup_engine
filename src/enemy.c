@@ -5,6 +5,7 @@
 #include "shots.h"
 #include "score.h"
 #include "enemy_shots.h"
+#include "powerup.h"
 
 #define ENEMY_COUNT 6
 
@@ -175,7 +176,12 @@ void enemy_update(void)
                      ENEMY_HEIGHT))
         {
             enemies[i].active = 0;
+
             score_add(ENEMY_SCORE_VALUE);
+
+            powerup_on_enemy_destroyed(
+                enemies[i].x,
+                enemies[i].y);
         }
 
         if (!enemies[i].active)

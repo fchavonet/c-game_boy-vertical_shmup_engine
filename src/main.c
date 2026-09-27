@@ -7,6 +7,7 @@
 #include "shots.h"
 #include "enemy.h"
 #include "enemy_shots.h"
+#include "powerup.h"
 #include "level.h"
 #include "hud.h"
 #include "score.h"
@@ -46,6 +47,7 @@ void main(void)
         shots_init();
         enemy_init();
         enemy_shots_init();
+        powerup_init();
         level_init();
         score_init();
         hud_init();
@@ -54,6 +56,7 @@ void main(void)
         shots_render();
         enemy_render();
         enemy_shots_render();
+        powerup_render();
         hud_render(player_get_lives(), score_get());
 
         SHOW_SPRITES;
@@ -65,6 +68,7 @@ void main(void)
 
             shots_update();
             enemy_shots_update();
+            powerup_update();
 
             player_update(buttons);
             enemy_update();
@@ -76,6 +80,7 @@ void main(void)
             shots_render();
             enemy_render();
             enemy_shots_render();
+            powerup_render();
             hud_render(player_get_lives(), score_get());
 
             vsync();
