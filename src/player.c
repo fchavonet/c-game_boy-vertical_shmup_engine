@@ -3,6 +3,7 @@
 #include "player.h"
 #include "shots.h"
 #include "enemy.h"
+#include "enemy_shots.h"
 
 #define PLAYER_WIDTH 8
 #define PLAYER_HEIGHT 8
@@ -155,16 +156,34 @@ void player_update(uint8_t buttons)
 
 void player_check_collision(void)
 {
+    uint8_t hit;
+    int16_t x;
+    int16_t y;
+
     if (!player_is_alive() || invulnerability_timer > 0)
     {
         return;
     }
 
-    if (enemy_touch(
-            player_x / POSITION_SCALE,
-            player_y / POSITION_SCALE,
+    x = player_x / POSITION_SCALE;
+    y = player_y / POSITION_SCALE;
+
+    hit = enemy_shots_hit(
+        x,
+        y,
+        PLAYER_WIDTH,
+        PLAYER_HEIGHT);
+
+    if (!hit)
+    {
+        hit = enemy_touch(
+            x,
+            y,
             PLAYER_WIDTH,
-            PLAYER_HEIGHT))
+            PLAYER_HEIGHT);
+    }
+
+    if (hit)
     {
         player_lives--;
 

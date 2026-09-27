@@ -4,6 +4,7 @@
 #include "enemy.h"
 #include "shots.h"
 #include "score.h"
+#include "enemy_shots.h"
 
 #define ENEMY_COUNT 6
 
@@ -21,6 +22,9 @@
 
 #define ENEMY_SCORE_VALUE 100
 
+#define ENEMY_FIRST_SHOT_DELAY 45
+#define ENEMY_SHOT_INTERVAL 60
+
 typedef struct
 {
     int16_t x;
@@ -29,6 +33,7 @@ typedef struct
     EnemyMovement movement;
     int8_t direction_x;
     uint8_t movement_timer;
+    uint8_t shot_timer;
 } Enemy;
 
 static Enemy enemies[ENEMY_COUNT];
@@ -58,6 +63,7 @@ void enemy_init(void)
         enemies[i].movement = ENEMY_MOVE_DOWN;
         enemies[i].direction_x = 0;
         enemies[i].movement_timer = 0;
+        enemies[i].shot_timer = 0;
 
         sprite_id = ENEMY_FIRST_SPRITE_ID + i;
 
@@ -97,6 +103,7 @@ uint8_t enemy_spawn(
             enemies[i].y = y;
             enemies[i].movement = movement;
             enemies[i].movement_timer = 0;
+            enemies[i].shot_timer = ENEMY_FIRST_SHOT_DELAY;
             enemies[i].direction_x = 0;
 
             switch (movement)
@@ -169,6 +176,25 @@ void enemy_update(void)
         {
             enemies[i].active = 0;
             score_add(ENEMY_SCORE_VALUE);
+        }
+
+        if (!enemies[i].active)
+        {
+            continue;
+        }
+
+        if (enemies[i].shot_timer > 0)
+        {
+            enemies[i].shot_timer--;
+        }
+
+        if (enemies[i].shot_timer == 0)
+        {
+            enemy_shots_spawn(
+                enemies[i].x + 2,
+                enemies[i].y + ENEMY_HEIGHT);
+
+            enemies[i].shot_timer = ENEMY_SHOT_INTERVAL;
         }
     }
 }

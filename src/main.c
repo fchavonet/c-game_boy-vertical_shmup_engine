@@ -6,6 +6,7 @@
 #include "player.h"
 #include "shots.h"
 #include "enemy.h"
+#include "enemy_shots.h"
 #include "level.h"
 #include "hud.h"
 #include "score.h"
@@ -41,10 +42,10 @@ void main(void)
             DMG_DARK_GRAY,
             DMG_BLACK);
 
-        /* Initialize once per game. */
         player_init();
         shots_init();
         enemy_init();
+        enemy_shots_init();
         level_init();
         score_init();
         hud_init();
@@ -52,6 +53,7 @@ void main(void)
         player_render();
         shots_render();
         enemy_render();
+        enemy_shots_render();
         hud_render(player_get_lives(), score_get());
 
         SHOW_SPRITES;
@@ -61,17 +63,19 @@ void main(void)
         {
             buttons = joypad();
 
-            /* Update the current game. */
             shots_update();
+            enemy_shots_update();
+
             player_update(buttons);
             enemy_update();
+
             player_check_collision();
             level_update();
 
-            /* Prepare the display. */
             player_render();
             shots_render();
             enemy_render();
+            enemy_shots_render();
             hud_render(player_get_lives(), score_get());
 
             vsync();
