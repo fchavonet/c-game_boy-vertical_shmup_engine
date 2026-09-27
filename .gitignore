@@ -1,0 +1,7 @@
+# Build files
+build/
+*.gb
+*.sav
+
+# System files
+.DS_Store
