@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "enemy.h"
+#include "boss.h"
 
 typedef struct
 {
@@ -18,6 +19,8 @@ typedef struct
     const SpawnEvent *events;
     uint16_t event_count;
     uint16_t boss_start_frame;
+
+    const BossDefinition *boss;
 } LevelDefinition;
 
 extern const LevelDefinition level_one;

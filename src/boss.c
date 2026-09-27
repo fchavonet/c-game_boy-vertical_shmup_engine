@@ -10,17 +10,11 @@
 #define BOSS_WIDTH 16
 #define BOSS_HEIGHT 16
 
-#define BOSS_START_HP 24
-#define BOSS_PHASE_TWO_HP 12
-
 #define BOSS_TARGET_Y 24
 
 #define BOSS_MIN_X 16
 #define BOSS_MAX_X \
     (GAME_PLAYFIELD_WIDTH - BOSS_WIDTH - BOSS_MIN_X)
-
-#define BOSS_PHASE_ONE_INTERVAL 60
-#define BOSS_PHASE_TWO_INTERVAL 35
 
 #define BOSS_HIT_FLASH_DURATION 6
 #define BOSS_SCORE_VALUE 1000
@@ -32,6 +26,8 @@ typedef enum
     BOSS_FIGHTING,
     BOSS_DEFEATED
 } BossState;
+
+static const BossDefinition *boss_definition;
 
 static BossState boss_state;
 
@@ -59,13 +55,14 @@ void boss_init(void)
     uint8_t i;
     uint8_t sprite_id;
 
+    boss_definition = 0;
     boss_state = BOSS_WAITING;
 
     boss_x = 0;
     boss_y = 0;
     direction_x = 1;
 
-    boss_hp = BOSS_START_HP;
+    boss_hp = 0;
     shot_timer = 0;
     hit_flash_timer = 0;
 
@@ -84,19 +81,22 @@ void boss_init(void)
     }
 }
 
-void boss_start(void)
+void boss_start(const BossDefinition *definition)
 {
     if (boss_state != BOSS_WAITING)
     {
         return;
     }
 
+    boss_definition = definition;
+
     boss_x = (GAME_PLAYFIELD_WIDTH - BOSS_WIDTH) / 2;
     boss_y = -BOSS_HEIGHT;
 
     direction_x = 1;
-    boss_hp = BOSS_START_HP;
-    shot_timer = BOSS_PHASE_ONE_INTERVAL;
+
+    boss_hp = boss_definition->start_hp;
+    shot_timer = boss_definition->phase_one_shot_interval;
     hit_flash_timer = 0;
 
     boss_state = BOSS_ENTERING;
@@ -154,13 +154,13 @@ void boss_update(void)
         }
     }
 
-    speed = 1;
-    shot_interval = BOSS_PHASE_ONE_INTERVAL;
+    speed = boss_definition->phase_one_speed;
+    shot_interval = boss_definition->phase_one_shot_interval;
 
-    if (boss_hp <= BOSS_PHASE_TWO_HP)
+    if (boss_hp <= boss_definition->phase_two_hp)
     {
-        speed = 2;
-        shot_interval = BOSS_PHASE_TWO_INTERVAL;
+        speed = boss_definition->phase_two_speed;
+        shot_interval = boss_definition->phase_two_shot_interval;
 
         if (shot_timer > shot_interval)
         {
@@ -188,7 +188,7 @@ void boss_update(void)
 
     if (shot_timer == 0)
     {
-        if (boss_hp > BOSS_PHASE_TWO_HP)
+        if (boss_hp > boss_definition->phase_two_hp)
         {
             enemy_shots_spawn(
                 boss_x + 6,

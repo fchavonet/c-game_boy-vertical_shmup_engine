@@ -57,15 +57,12 @@ void level_update(void)
         next_event >= current_level->event_count &&
         level_frame >= current_level->boss_start_frame)
     {
-        /*
-         * Wait until every active enemy has disappeared.
-         */
         if (!enemy_is_clear())
         {
             return;
         }
 
-        boss_start();
+        boss_start(current_level->boss);
         boss_started = 1;
         return;
     }
