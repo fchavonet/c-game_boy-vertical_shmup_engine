@@ -1,19 +1,14 @@
 #include <gb/gb.h>
 
 #include "game_config.h"
+#include "graphics_layout.h"
 #include "powerup.h"
 
 #define POWERUP_WIDTH 8
 #define POWERUP_HEIGHT 8
 
-#define POWERUP_SPRITE_ID 29
-#define POWERUP_TILE_ID 15
-
 #define POWERUP_KILLS_REQUIRED 3
 #define POWERUP_MOVE_INTERVAL 2
-
-#define SPRITE_OFFSET_X 8
-#define SPRITE_OFFSET_Y 16
 
 static int16_t powerup_x;
 static int16_t powerup_y;
@@ -40,10 +35,10 @@ void powerup_init(void)
     movement_timer = 0;
     kill_count = 0;
 
-    set_sprite_data(POWERUP_TILE_ID, 1, powerup_tile);
-    set_sprite_tile(POWERUP_SPRITE_ID, POWERUP_TILE_ID);
-    set_sprite_prop(POWERUP_SPRITE_ID, 0);
-    move_sprite(POWERUP_SPRITE_ID, 0, 0);
+    set_sprite_data(GFX_POWERUP_TILE_ID, 1, powerup_tile);
+    set_sprite_tile(GFX_POWERUP_SPRITE_ID, GFX_POWERUP_TILE_ID);
+    set_sprite_prop(GFX_POWERUP_SPRITE_ID, 0);
+    move_sprite(GFX_POWERUP_SPRITE_ID, 0, 0);
 }
 
 void powerup_on_enemy_destroyed(int16_t x, int16_t y)
@@ -136,12 +131,12 @@ void powerup_render(void)
     if (powerup_active)
     {
         move_sprite(
-            POWERUP_SPRITE_ID,
-            (uint8_t)(powerup_x + SPRITE_OFFSET_X),
-            (uint8_t)(powerup_y + SPRITE_OFFSET_Y));
+            GFX_POWERUP_SPRITE_ID,
+            (uint8_t)(powerup_x + GFX_SPRITE_OFFSET_X),
+            (uint8_t)(powerup_y + GFX_SPRITE_OFFSET_Y));
     }
     else
     {
-        move_sprite(POWERUP_SPRITE_ID, 0, 0);
+        move_sprite(GFX_POWERUP_SPRITE_ID, 0, 0);
     }
 }

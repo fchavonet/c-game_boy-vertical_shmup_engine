@@ -1,15 +1,10 @@
 #include <gb/gb.h>
 
+#include "graphics_layout.h"
 #include "hud.h"
 
 #define HUD_MAX_LIVES 3
 #define HUD_SCORE_DIGITS 5
-
-#define HUD_BLANK_TILE_ID 128u
-#define HUD_SEPARATOR_TILE_ID 129u
-
-#define HUD_HEART_TOP_TILE_ID 130u
-#define HUD_FIRST_DIGIT_TOP_TILE_ID 132u
 
 #define HUD_GLYPH_COUNT 11
 #define HUD_GLYPH_HEIGHT 7
@@ -25,9 +20,7 @@ static uint8_t handlers_installed;
 static volatile uint8_t hud_visible;
 
 /*
- * Two tiles:
- * - An empty tile for the background and empty HUD cells.
- * - A horizontal separator for the first HUD row.
+ * An empty tile followed by a separator tile.
  */
 static const uint8_t hud_base_tiles[] = {
     0x00, 0x00,
@@ -50,7 +43,6 @@ static const uint8_t hud_base_tiles[] = {
 
 /*
  * One byte per image row.
- * The heart is six pixels wide.
  * Digits are shifted right during tile generation.
  */
 static const uint8_t hud_glyphs[HUD_GLYPH_COUNT][HUD_GLYPH_HEIGHT] = {
@@ -109,6 +101,7 @@ void hud_init(void)
     uint8_t row;
     uint8_t i;
     uint8_t pixels;
+    uint8_t glyph_tile;
 
     uint8_t tile_data[32];
     uint8_t map_row[20];
@@ -128,14 +121,19 @@ void hud_init(void)
         DMG_BLACK);
 
     set_bkg_data(
-        HUD_BLANK_TILE_ID,
-        2,
+        GFX_HUD_BLANK_TILE_ID,
+        1,
         hud_base_tiles);
+
+    set_bkg_data(
+        GFX_HUD_SEPARATOR_TILE_ID,
+        1,
+        hud_base_tiles + 16);
 
     /*
      * Each glyph occupies two vertically stacked tiles.
      * Row 0 contains the separator.
-     * Rows 3 through 9 contain the seven-pixel-high glyph.
+     * Rows 3 through 9 contain the glyph.
      */
     for (glyph = 0; glyph < HUD_GLYPH_COUNT; glyph++)
     {
@@ -163,32 +161,52 @@ void hud_init(void)
             tile_data[row * 2 + 1] = pixels;
         }
 
-        set_bkg_data(
-            HUD_HEART_TOP_TILE_ID + glyph * 2,
-            2,
-            tile_data);
+        if (glyph == 0)
+        {
+            set_bkg_data(
+                GFX_HUD_HEART_TOP_TILE_ID,
+                1,
+                tile_data);
+
+            set_bkg_data(
+                GFX_HUD_HEART_BOTTOM_TILE_ID,
+                1,
+                tile_data + 16);
+        }
+        else
+        {
+            glyph_tile = (uint8_t)(GFX_HUD_FIRST_DIGIT_TILE_ID +
+                                   (glyph - 1u) * 2u);
+
+            set_bkg_data(glyph_tile, 2, tile_data);
+        }
     }
 
-    fill_bkg_rect(0, 0, 32, 32, HUD_BLANK_TILE_ID);
+    fill_bkg_rect(0, 0, 32, 32, GFX_HUD_BLANK_TILE_ID);
 
     for (i = 0; i < 20; i++)
     {
-        map_row[i] = HUD_SEPARATOR_TILE_ID;
+        map_row[i] = GFX_HUD_SEPARATOR_TILE_ID;
     }
 
     set_win_tiles(0, 0, 20, 1, map_row);
 
     for (i = 0; i < 20; i++)
     {
-        map_row[i] = HUD_BLANK_TILE_ID;
+        map_row[i] = GFX_HUD_BLANK_TILE_ID;
     }
 
     set_win_tiles(0, 1, 20, 1, map_row);
 
-    /* These sprite slots are no longer used by the HUD. */
-    for (i = 15; i <= 22; i++)
+    /*
+     * Hide the reserved slots from the old sprite HUD.
+     */
+    for (i = 0; i < GFX_LEGACY_HUD_SPRITE_COUNT; i++)
     {
-        move_sprite(i, 0, 0);
+        move_sprite(
+            GFX_LEGACY_HUD_FIRST_SPRITE_ID + i,
+            0,
+            0);
     }
 
     move_win(7, HUD_TOP);
@@ -227,13 +245,13 @@ void hud_render(uint8_t lives, uint32_t score)
     {
         for (i = 0; i < HUD_MAX_LIVES; i++)
         {
-            heart_tiles[0] = HUD_SEPARATOR_TILE_ID;
-            heart_tiles[1] = HUD_BLANK_TILE_ID;
+            heart_tiles[0] = GFX_HUD_SEPARATOR_TILE_ID;
+            heart_tiles[1] = GFX_HUD_BLANK_TILE_ID;
 
             if (i < lives)
             {
-                heart_tiles[0] = HUD_HEART_TOP_TILE_ID;
-                heart_tiles[1] = HUD_HEART_TOP_TILE_ID + 1u;
+                heart_tiles[0] = GFX_HUD_HEART_TOP_TILE_ID;
+                heart_tiles[1] = GFX_HUD_HEART_BOTTOM_TILE_ID;
             }
 
             set_win_tiles(
@@ -256,12 +274,12 @@ void hud_render(uint8_t lives, uint32_t score)
             digit = (uint8_t)(remaining % 10);
             remaining /= 10;
 
-            top_tile = HUD_FIRST_DIGIT_TOP_TILE_ID + digit * 2;
+            top_tile = (uint8_t)(GFX_HUD_FIRST_DIGIT_TILE_ID + digit * 2u);
 
             score_tiles[HUD_SCORE_DIGITS - 1 - i] = top_tile;
 
             score_tiles[HUD_SCORE_DIGITS * 2 - 1 - i] =
-                top_tile + 1;
+                (uint8_t)(top_tile + 1u);
         }
 
         set_win_tiles(

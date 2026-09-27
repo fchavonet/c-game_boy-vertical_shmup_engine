@@ -1,19 +1,15 @@
 #include <gb/gb.h>
 
+#include "graphics_layout.h"
 #include "player_shots.h"
 
-#define SHOT_COUNT 8
+#define SHOT_COUNT GFX_PLAYER_SHOT_SPRITE_COUNT
+
 #define SHOT_SPEED 4
 #define SHOT_INTERVAL 10
 
 #define SHOT_WIDTH 2
 #define SHOT_HEIGHT 4
-
-#define SHOT_FIRST_SPRITE_ID 1
-#define SHOT_TILE_ID 1
-
-#define SPRITE_OFFSET_X 8
-#define SPRITE_OFFSET_Y 16
 
 typedef struct
 {
@@ -47,7 +43,10 @@ void shots_init(void)
 
     cooldown = 0;
 
-    set_sprite_data(SHOT_TILE_ID, 1, shot_tile);
+    set_sprite_data(
+        GFX_PLAYER_SHOT_TILE_ID,
+        1,
+        shot_tile);
 
     for (i = 0; i < SHOT_COUNT; i++)
     {
@@ -55,9 +54,9 @@ void shots_init(void)
         shots[i].y = 0;
         shots[i].active = 0;
 
-        sprite_id = SHOT_FIRST_SPRITE_ID + i;
+        sprite_id = GFX_PLAYER_SHOT_FIRST_SPRITE_ID + i;
 
-        set_sprite_tile(sprite_id, SHOT_TILE_ID);
+        set_sprite_tile(sprite_id, GFX_PLAYER_SHOT_TILE_ID);
         set_sprite_prop(sprite_id, 0);
         move_sprite(sprite_id, 0, 0);
     }
@@ -149,14 +148,14 @@ void shots_render(void)
 
     for (i = 0; i < SHOT_COUNT; i++)
     {
-        sprite_id = SHOT_FIRST_SPRITE_ID + i;
+        sprite_id = GFX_PLAYER_SHOT_FIRST_SPRITE_ID + i;
 
         if (shots[i].active)
         {
             move_sprite(
                 sprite_id,
-                shots[i].x + SPRITE_OFFSET_X,
-                shots[i].y + SPRITE_OFFSET_Y);
+                shots[i].x + GFX_SPRITE_OFFSET_X,
+                shots[i].y + GFX_SPRITE_OFFSET_Y);
         }
         else
         {
@@ -184,7 +183,6 @@ uint8_t shots_hit(
                 shots[i].y + SHOT_HEIGHT > y)
             {
                 shots[i].active = 0;
-
                 return 1;
             }
         }

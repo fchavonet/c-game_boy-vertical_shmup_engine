@@ -2,25 +2,20 @@
 #include <stdint.h>
 
 #include "game_config.h"
+#include "graphics_layout.h"
 #include "enemy.h"
 #include "player_shots.h"
 #include "score.h"
 #include "enemy_shots.h"
 #include "powerup.h"
 
-#define ENEMY_COUNT 6
+#define ENEMY_COUNT GFX_ENEMY_SPRITE_COUNT
 
 #define ENEMY_WIDTH 8
 #define ENEMY_HEIGHT 8
 
 #define ENEMY_SPEED 1
 #define ENEMY_ZIGZAG_INTERVAL 32
-
-#define ENEMY_FIRST_SPRITE_ID 9
-#define ENEMY_TILE_ID 2
-
-#define SPRITE_OFFSET_X 8
-#define SPRITE_OFFSET_Y 16
 
 #define ENEMY_SCORE_VALUE 100
 
@@ -55,7 +50,7 @@ void enemy_init(void)
     uint8_t i;
     uint8_t sprite_id;
 
-    set_sprite_data(ENEMY_TILE_ID, 1, enemy_tile);
+    set_sprite_data(GFX_ENEMY_TILE_ID, 1, enemy_tile);
 
     for (i = 0; i < ENEMY_COUNT; i++)
     {
@@ -67,9 +62,9 @@ void enemy_init(void)
         enemies[i].movement_timer = 0;
         enemies[i].shot_timer = 0;
 
-        sprite_id = ENEMY_FIRST_SPRITE_ID + i;
+        sprite_id = GFX_ENEMY_FIRST_SPRITE_ID + i;
 
-        set_sprite_tile(sprite_id, ENEMY_TILE_ID);
+        set_sprite_tile(sprite_id, GFX_ENEMY_TILE_ID);
         set_sprite_prop(sprite_id, 0);
         move_sprite(sprite_id, 0, 0);
     }
@@ -212,14 +207,14 @@ void enemy_render(void)
 
     for (i = 0; i < ENEMY_COUNT; i++)
     {
-        sprite_id = ENEMY_FIRST_SPRITE_ID + i;
+        sprite_id = GFX_ENEMY_FIRST_SPRITE_ID + i;
 
         if (enemies[i].active)
         {
             move_sprite(
                 sprite_id,
-                (uint8_t)(enemies[i].x + SPRITE_OFFSET_X),
-                (uint8_t)(enemies[i].y + SPRITE_OFFSET_Y));
+                (uint8_t)(enemies[i].x + GFX_SPRITE_OFFSET_X),
+                (uint8_t)(enemies[i].y + GFX_SPRITE_OFFSET_Y));
         }
         else
         {

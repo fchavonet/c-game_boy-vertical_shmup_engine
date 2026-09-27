@@ -1,19 +1,14 @@
 #include <gb/gb.h>
 
 #include "game_config.h"
+#include "graphics_layout.h"
 #include "enemy_shots.h"
 
-#define ENEMY_SHOT_COUNT 6
+#define ENEMY_SHOT_COUNT GFX_ENEMY_SHOT_SPRITE_COUNT
 
 #define ENEMY_SHOT_WIDTH 4
 #define ENEMY_SHOT_HEIGHT 4
 #define ENEMY_SHOT_SPEED 2
-
-#define ENEMY_SHOT_FIRST_SPRITE_ID 23
-#define ENEMY_SHOT_TILE_ID 14
-
-#define SPRITE_OFFSET_X 8
-#define SPRITE_OFFSET_Y 16
 
 typedef struct
 {
@@ -40,7 +35,7 @@ void enemy_shots_init(void)
     uint8_t sprite_id;
 
     set_sprite_data(
-        ENEMY_SHOT_TILE_ID,
+        GFX_ENEMY_SHOT_TILE_ID,
         1,
         enemy_shot_tile);
 
@@ -50,9 +45,9 @@ void enemy_shots_init(void)
         enemy_shots[i].y = 0;
         enemy_shots[i].active = 0;
 
-        sprite_id = ENEMY_SHOT_FIRST_SPRITE_ID + i;
+        sprite_id = GFX_ENEMY_SHOT_FIRST_SPRITE_ID + i;
 
-        set_sprite_tile(sprite_id, ENEMY_SHOT_TILE_ID);
+        set_sprite_tile(sprite_id, GFX_ENEMY_SHOT_TILE_ID);
         set_sprite_prop(sprite_id, 0);
         move_sprite(sprite_id, 0, 0);
     }
@@ -135,14 +130,14 @@ void enemy_shots_render(void)
 
     for (i = 0; i < ENEMY_SHOT_COUNT; i++)
     {
-        sprite_id = ENEMY_SHOT_FIRST_SPRITE_ID + i;
+        sprite_id = GFX_ENEMY_SHOT_FIRST_SPRITE_ID + i;
 
         if (enemy_shots[i].active)
         {
             move_sprite(
                 sprite_id,
-                (uint8_t)(enemy_shots[i].x + SPRITE_OFFSET_X),
-                (uint8_t)(enemy_shots[i].y + SPRITE_OFFSET_Y));
+                (uint8_t)(enemy_shots[i].x + GFX_SPRITE_OFFSET_X),
+                (uint8_t)(enemy_shots[i].y + GFX_SPRITE_OFFSET_Y));
         }
         else
         {

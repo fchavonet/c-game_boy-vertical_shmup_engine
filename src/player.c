@@ -1,6 +1,7 @@
 #include <gb/gb.h>
 
 #include "game_config.h"
+#include "graphics_layout.h"
 #include "player.h"
 #include "player_shots.h"
 #include "enemy.h"
@@ -33,12 +34,6 @@
 #define PLAYER_INVULNERABILITY_DURATION 120
 #define PLAYER_MAX_WEAPON_LEVEL 3
 
-#define PLAYER_SPRITE_ID 0
-#define PLAYER_TILE_ID 0
-
-#define SPRITE_OFFSET_X 8
-#define SPRITE_OFFSET_Y 16
-
 static const uint8_t player_tile[] = {
     0x18, 0x18,
     0x18, 0x18,
@@ -65,9 +60,9 @@ void player_init(void)
     invulnerability_timer = 0;
     weapon_level = 1;
 
-    set_sprite_data(PLAYER_TILE_ID, 1, player_tile);
-    set_sprite_tile(PLAYER_SPRITE_ID, PLAYER_TILE_ID);
-    set_sprite_prop(PLAYER_SPRITE_ID, 0);
+    set_sprite_data(GFX_PLAYER_TILE_ID, 1, player_tile);
+    set_sprite_tile(GFX_PLAYER_SPRITE_ID, GFX_PLAYER_TILE_ID);
+    set_sprite_prop(GFX_PLAYER_SPRITE_ID, 0);
 }
 
 uint8_t player_is_alive(void)
@@ -235,7 +230,7 @@ void player_render(void)
 {
     if (!player_is_alive())
     {
-        move_sprite(PLAYER_SPRITE_ID, 0, 0);
+        move_sprite(GFX_PLAYER_SPRITE_ID, 0, 0);
         return;
     }
 
@@ -243,14 +238,14 @@ void player_render(void)
         invulnerability_timer > 0 &&
         (invulnerability_timer & 4))
     {
-        move_sprite(PLAYER_SPRITE_ID, 0, 0);
+        move_sprite(GFX_PLAYER_SPRITE_ID, 0, 0);
         return;
     }
 
     move_sprite(
-        PLAYER_SPRITE_ID,
-        (uint8_t)(player_x / POSITION_SCALE) + SPRITE_OFFSET_X,
-        (uint8_t)(player_y / POSITION_SCALE) + SPRITE_OFFSET_Y);
+        GFX_PLAYER_SPRITE_ID,
+        (uint8_t)(player_x / POSITION_SCALE) + GFX_SPRITE_OFFSET_X,
+        (uint8_t)(player_y / POSITION_SCALE) + GFX_SPRITE_OFFSET_Y);
 }
 
 uint8_t player_get_lives(void)

@@ -1,5 +1,7 @@
 #include <gb/gb.h>
 
+#include "game_config.h"
+#include "graphics_layout.h"
 #include "boss.h"
 #include "player_shots.h"
 #include "enemy_shots.h"
@@ -8,25 +10,20 @@
 #define BOSS_WIDTH 16
 #define BOSS_HEIGHT 16
 
-#define BOSS_FIRST_SPRITE_ID 30
-#define BOSS_TILE_ID 16
-
 #define BOSS_START_HP 24
 #define BOSS_PHASE_TWO_HP 12
 
 #define BOSS_TARGET_Y 24
 
 #define BOSS_MIN_X 16
-#define BOSS_MAX_X 128
+#define BOSS_MAX_X \
+    (GAME_PLAYFIELD_WIDTH - BOSS_WIDTH - BOSS_MIN_X)
 
 #define BOSS_PHASE_ONE_INTERVAL 60
 #define BOSS_PHASE_TWO_INTERVAL 35
 
 #define BOSS_HIT_FLASH_DURATION 6
 #define BOSS_SCORE_VALUE 1000
-
-#define SPRITE_OFFSET_X 8
-#define SPRITE_OFFSET_Y 16
 
 typedef enum
 {
@@ -72,13 +69,16 @@ void boss_init(void)
     shot_timer = 0;
     hit_flash_timer = 0;
 
-    set_sprite_data(BOSS_TILE_ID, 1, boss_tile);
+    set_sprite_data(
+        GFX_BOSS_FIRST_TILE_ID,
+        GFX_BOSS_TILE_COUNT,
+        boss_tile);
 
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < GFX_BOSS_SPRITE_COUNT; i++)
     {
-        sprite_id = BOSS_FIRST_SPRITE_ID + i;
+        sprite_id = GFX_BOSS_FIRST_SPRITE_ID + i;
 
-        set_sprite_tile(sprite_id, BOSS_TILE_ID);
+        set_sprite_tile(sprite_id, GFX_BOSS_FIRST_TILE_ID);
         set_sprite_prop(sprite_id, 0);
         move_sprite(sprite_id, 0, 0);
     }
@@ -91,7 +91,7 @@ void boss_start(void)
         return;
     }
 
-    boss_x = (SCREENWIDTH - BOSS_WIDTH) / 2;
+    boss_x = (GAME_PLAYFIELD_WIDTH - BOSS_WIDTH) / 2;
     boss_y = -BOSS_HEIGHT;
 
     direction_x = 1;
@@ -150,7 +150,6 @@ void boss_update(void)
         {
             boss_state = BOSS_DEFEATED;
             score_add(BOSS_SCORE_VALUE);
-
             return;
         }
     }
@@ -248,17 +247,17 @@ void boss_render(void)
         boss_state == BOSS_DEFEATED ||
         (hit_flash_timer & 1))
     {
-        for (i = 0; i < 4; i++)
+        for (i = 0; i < GFX_BOSS_SPRITE_COUNT; i++)
         {
-            move_sprite(BOSS_FIRST_SPRITE_ID + i, 0, 0);
+            move_sprite(GFX_BOSS_FIRST_SPRITE_ID + i, 0, 0);
         }
 
         return;
     }
 
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < GFX_BOSS_SPRITE_COUNT; i++)
     {
-        sprite_id = BOSS_FIRST_SPRITE_ID + i;
+        sprite_id = GFX_BOSS_FIRST_SPRITE_ID + i;
 
         part_x = boss_x;
         part_y = boss_y;
@@ -273,7 +272,7 @@ void boss_render(void)
             part_y += 8;
         }
 
-        if (part_y <= -8 || part_y >= SCREENHEIGHT)
+        if (part_y <= -8 || part_y >= GAME_PLAYFIELD_HEIGHT)
         {
             move_sprite(sprite_id, 0, 0);
         }
@@ -281,8 +280,8 @@ void boss_render(void)
         {
             move_sprite(
                 sprite_id,
-                (uint8_t)(part_x + SPRITE_OFFSET_X),
-                (uint8_t)(part_y + SPRITE_OFFSET_Y));
+                (uint8_t)(part_x + GFX_SPRITE_OFFSET_X),
+                (uint8_t)(part_y + GFX_SPRITE_OFFSET_Y));
         }
     }
 }
