@@ -4,10 +4,11 @@
 #include <stdio.h>
 
 #include "player.h"
-#include "shots.h"
+#include "player_shots.h"
 #include "enemy.h"
 #include "enemy_shots.h"
 #include "powerup.h"
+#include "boss.h"
 #include "level.h"
 #include "hud.h"
 #include "score.h"
@@ -48,6 +49,7 @@ void main(void)
         enemy_init();
         enemy_shots_init();
         powerup_init();
+        boss_init();
         level_init();
         score_init();
         hud_init();
@@ -57,12 +59,13 @@ void main(void)
         enemy_render();
         enemy_shots_render();
         powerup_render();
+        boss_render();
         hud_render(player_get_lives(), score_get());
 
         SHOW_SPRITES;
         DISPLAY_ON;
 
-        while (player_is_alive())
+        while (player_is_alive() && !level_is_complete())
         {
             buttons = joypad();
 
@@ -72,15 +75,20 @@ void main(void)
 
             player_update(buttons);
             enemy_update();
+            boss_update();
 
-            player_check_collision();
-            level_update();
+            if (!level_is_complete())
+            {
+                player_check_collision();
+                level_update();
+            }
 
             player_render();
             shots_render();
             enemy_render();
             enemy_shots_render();
             powerup_render();
+            boss_render();
             hud_render(player_get_lives(), score_get());
 
             vsync();
@@ -90,8 +98,16 @@ void main(void)
 
         cls();
 
-        gotoxy(5, 7);
-        printf("GAME OVER!");
+        if (level_is_complete())
+        {
+            gotoxy(4, 7);
+            printf("STAGE CLEAR!");
+        }
+        else
+        {
+            gotoxy(5, 7);
+            printf("GAME OVER!");
+        }
 
         gotoxy(4, 9);
         printf("PRESS START...");

@@ -1,6 +1,6 @@
 #include <gb/gb.h>
 
-#include "shots.h"
+#include "player_shots.h"
 
 #define SHOT_COUNT 8
 #define SHOT_SPEED 4

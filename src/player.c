@@ -1,10 +1,11 @@
 #include <gb/gb.h>
 
 #include "player.h"
-#include "shots.h"
+#include "player_shots.h"
 #include "enemy.h"
 #include "enemy_shots.h"
 #include "powerup.h"
+#include "boss.h"
 
 #define PLAYER_WIDTH 8
 #define PLAYER_HEIGHT 8
@@ -194,6 +195,15 @@ void player_check_collision(void)
     if (!hit)
     {
         hit = enemy_touch(
+            x,
+            y,
+            PLAYER_WIDTH,
+            PLAYER_HEIGHT);
+    }
+
+    if (!hit)
+    {
+        hit = boss_touch(
             x,
             y,
             PLAYER_WIDTH,

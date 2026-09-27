@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 #include "enemy.h"
-#include "shots.h"
+#include "player_shots.h"
 #include "score.h"
 #include "enemy_shots.h"
 #include "powerup.h"

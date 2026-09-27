@@ -2,6 +2,9 @@
 
 #include "level.h"
 #include "enemy.h"
+#include "boss.h"
+
+#define BOSS_START_FRAME 900
 
 typedef struct
 {
@@ -30,16 +33,23 @@ static const SpawnEvent spawn_events[] = {
 
 static uint16_t level_frame;
 static uint16_t next_event;
+static uint8_t boss_started;
 
 void level_init(void)
 {
     level_frame = 0;
     next_event = 0;
+    boss_started = 0;
+}
+
+uint8_t level_is_complete(void)
+{
+    return boss_is_defeated();
 }
 
 void level_update(void)
 {
-    if (next_event >= SPAWN_EVENT_COUNT)
+    if (boss_started)
     {
         return;
     }
@@ -62,8 +72,15 @@ void level_update(void)
         next_event++;
     }
 
-    if (next_event < SPAWN_EVENT_COUNT)
+    if (
+        next_event >= SPAWN_EVENT_COUNT &&
+        level_frame >= BOSS_START_FRAME)
     {
-        level_frame++;
+        boss_start();
+        boss_started = 1;
+
+        return;
     }
+
+    level_frame++;
 }
