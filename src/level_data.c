@@ -2,10 +2,6 @@
 
 /*
  * Reusable movement paths.
- *
- * Each step contains:
- * duration, horizontal direction, vertical direction,
- * shooting permission.
  */
 
 static const EnemyMovementStep attack_exit_left_steps[] = {
@@ -42,8 +38,10 @@ static const BossDefinition level_one_boss = {
     2, /* Phase two movement speed */
 
     60, /* Phase one shot interval */
-    35  /* Phase two shot interval */
-};
+    35, /* Phase two shot interval */
+
+    BOSS_SHOT_STRAIGHT,
+    BOSS_SHOT_DOUBLE};
 
 static const SpawnEvent level_one_events[] = {
     /* Compare both paths immediately */
@@ -98,8 +96,10 @@ static const BossDefinition level_two_boss = {
     2, /* Phase two movement speed */
 
     45, /* Phase one shot interval */
-    30  /* Phase two shot interval */
-};
+    60, /* Phase two shot interval */
+
+    BOSS_SHOT_AIMED,
+    BOSS_SHOT_SPREAD};
 
 static const SpawnEvent level_two_events[] = {
     /* Crossing diagonals */

@@ -3,6 +3,7 @@
 #include "game_config.h"
 #include "graphics_layout.h"
 #include "boss.h"
+#include "player.h"
 #include "player_shots.h"
 #include "enemy_shots.h"
 #include "score.h"
@@ -56,6 +57,54 @@ static const uint8_t boss_tile[] = {
     0xFF, 0xFF,
     0xFF, 0xFF};
 
+/*
+ * Execute the attack selected by the current phase.
+ */
+static void boss_fire(BossShotMode mode)
+{
+    switch (mode)
+    {
+    case BOSS_SHOT_STRAIGHT:
+        enemy_shots_spawn(
+            boss_x + 6,
+            boss_y + BOSS_HEIGHT);
+        break;
+
+    case BOSS_SHOT_DOUBLE:
+        enemy_shots_spawn(
+            boss_x + 1,
+            boss_y + BOSS_HEIGHT);
+
+        enemy_shots_spawn(
+            boss_x + 11,
+            boss_y + BOSS_HEIGHT);
+        break;
+
+    case BOSS_SHOT_AIMED:
+        if (
+            player_is_alive() &&
+            !player_is_destroying())
+        {
+            enemy_shots_spawn_aimed(
+                boss_x + 6,
+                boss_y + BOSS_HEIGHT,
+                player_get_center_x(),
+                player_get_center_y());
+        }
+        break;
+
+    case BOSS_SHOT_SPREAD:
+        enemy_shots_spawn_spread(
+            boss_x + 6,
+            boss_y + BOSS_HEIGHT);
+        break;
+
+    case BOSS_SHOT_NONE:
+    default:
+        break;
+    }
+}
+
 void boss_init(void)
 {
     uint8_t i;
@@ -95,6 +144,16 @@ void boss_start(const BossDefinition *definition)
         return;
     }
 
+    if (definition == 0)
+    {
+        return;
+    }
+
+    if (definition->start_hp == 0)
+    {
+        return;
+    }
+
     boss_definition = definition;
 
     boss_x = (GAME_PLAYFIELD_WIDTH - BOSS_WIDTH) / 2;
@@ -119,6 +178,7 @@ void boss_update(void)
 {
     uint8_t speed;
     uint8_t shot_interval;
+    BossShotMode shot_mode;
 
     if (
         boss_state == BOSS_WAITING ||
@@ -127,10 +187,6 @@ void boss_update(void)
         return;
     }
 
-    /*
-     * Finish the destruction sequence before completing
-     * the level.
-     */
     if (boss_state == BOSS_DESTROYING)
     {
         destruction_timer++;
@@ -182,13 +238,18 @@ void boss_update(void)
         }
     }
 
+    /*
+     * Select all parameters from the current phase.
+     */
     speed = boss_definition->phase_one_speed;
     shot_interval = boss_definition->phase_one_shot_interval;
+    shot_mode = boss_definition->phase_one_shot_mode;
 
     if (boss_hp <= boss_definition->phase_two_hp)
     {
         speed = boss_definition->phase_two_speed;
         shot_interval = boss_definition->phase_two_shot_interval;
+        shot_mode = boss_definition->phase_two_shot_mode;
 
         if (shot_timer > shot_interval)
         {
@@ -209,6 +270,15 @@ void boss_update(void)
         direction_x = -1;
     }
 
+    /*
+     * Allow phases without shooting.
+     */
+    if (shot_mode == BOSS_SHOT_NONE || shot_interval == 0)
+    {
+        shot_timer = shot_interval;
+        return;
+    }
+
     if (shot_timer > 0)
     {
         shot_timer--;
@@ -216,23 +286,7 @@ void boss_update(void)
 
     if (shot_timer == 0)
     {
-        if (boss_hp > boss_definition->phase_two_hp)
-        {
-            enemy_shots_spawn(
-                boss_x + 6,
-                boss_y + BOSS_HEIGHT);
-        }
-        else
-        {
-            enemy_shots_spawn(
-                boss_x + 1,
-                boss_y + BOSS_HEIGHT);
-
-            enemy_shots_spawn(
-                boss_x + 11,
-                boss_y + BOSS_HEIGHT);
-        }
-
+        boss_fire(shot_mode);
         shot_timer = shot_interval;
     }
 }
@@ -243,10 +297,6 @@ uint8_t boss_touch(
     uint8_t width,
     uint8_t height)
 {
-    /*
-     * A boss being destroyed can no longer hurt the player
-     * through direct contact.
-     */
     if (
         boss_state != BOSS_ENTERING &&
         boss_state != BOSS_FIGHTING)
@@ -316,10 +366,6 @@ void boss_render(void)
 
         if (boss_state == BOSS_DESTROYING)
         {
-            /*
-             * Start each explosion a little later
-             * than the previous one.
-             */
             delay = i * BOSS_EXPLOSION_PART_DELAY;
 
             if (destruction_timer < delay)
@@ -330,12 +376,10 @@ void boss_render(void)
 
             age = destruction_timer - delay;
 
-            frame = (uint8_t)(
-                (age / BOSS_EXPLOSION_FRAME_DURATION) %
-                GFX_EXPLOSION_TILE_COUNT);
+            frame = (uint8_t)((age / BOSS_EXPLOSION_FRAME_DURATION) %
+                              GFX_EXPLOSION_TILE_COUNT);
 
-            tile_id = (uint8_t)(
-                GFX_EXPLOSION_FIRST_TILE_ID + frame);
+            tile_id = (uint8_t)(GFX_EXPLOSION_FIRST_TILE_ID + frame);
 
             set_sprite_tile(sprite_id, tile_id);
         }
