@@ -87,7 +87,7 @@ static void spawn_with_velocity(
     int16_t velocity_x,
     int16_t velocity_y)
 {
-    uint8_t i;
+    static uint8_t i;
 
     if (!shot_position_is_valid(x, y))
     {
@@ -151,16 +151,16 @@ void enemy_shots_spawn_aimed(
     int16_t target_x,
     int16_t target_y)
 {
-    int16_t delta_x;
-    int16_t delta_y;
+    static int16_t delta_x;
+    static int16_t delta_y;
 
-    int16_t velocity_x;
-    int16_t velocity_y;
+    static int16_t velocity_x;
+    static int16_t velocity_y;
 
-    uint16_t absolute_x;
-    uint16_t absolute_y;
-    uint16_t distance_squared;
-    uint16_t distance;
+    static uint16_t absolute_x;
+    static uint16_t absolute_y;
+    static uint16_t distance_squared;
+    static uint16_t distance;
 
     if (!shot_position_is_valid(x, y))
     {
@@ -224,8 +224,10 @@ void enemy_shots_spawn_aimed(
 
 void enemy_shots_spawn_spread(int16_t x, int16_t y)
 {
-    uint8_t i;
-    uint8_t available = 0;
+    static uint8_t i;
+    static uint8_t available;
+
+    available = 0;
 
     if (!shot_position_is_valid(x, y))
     {
@@ -270,7 +272,7 @@ void enemy_shots_spawn_spread(int16_t x, int16_t y)
 
 void enemy_shots_update(void)
 {
-    uint8_t i;
+    static uint8_t i;
 
     for (i = 0; i < ENEMY_SHOT_COUNT; i++)
     {
@@ -303,9 +305,9 @@ uint8_t enemy_shots_hit(
     uint8_t width,
     uint8_t height)
 {
-    uint8_t i;
-    int16_t shot_x;
-    int16_t shot_y;
+    static uint8_t i;
+    static int16_t shot_x;
+    static int16_t shot_y;
 
     for (i = 0; i < ENEMY_SHOT_COUNT; i++)
     {
@@ -333,10 +335,10 @@ uint8_t enemy_shots_hit(
 
 void enemy_shots_render(void)
 {
-    uint8_t i;
-    uint8_t sprite_id;
-    int16_t shot_x;
-    int16_t shot_y;
+    static uint8_t i;
+    static uint8_t sprite_id;
+    static int16_t shot_x;
+    static int16_t shot_y;
 
     for (i = 0; i < ENEMY_SHOT_COUNT; i++)
     {

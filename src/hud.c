@@ -240,6 +240,8 @@ void hud_render(uint8_t lives, uint32_t score)
     uint8_t score_tiles[HUD_SCORE_DIGITS * 2];
 
     uint32_t remaining;
+    uint16_t remainder;
+    static const uint16_t divisors[4] = {1000u, 100u, 10u, 1u};
 
     if (lives != displayed_lives)
     {
@@ -269,17 +271,33 @@ void hud_render(uint8_t lives, uint32_t score)
     {
         remaining = score;
 
-        for (i = 0; i < HUD_SCORE_DIGITS; i++)
+        digit = 0;
+
+        while (remaining >= 10000UL)
         {
-            digit = (uint8_t)(remaining % 10);
-            remaining /= 10;
+            remaining -= 10000UL;
+            digit++;
+        }
+
+        top_tile = (uint8_t)(GFX_HUD_FIRST_DIGIT_TILE_ID + digit * 2u);
+        score_tiles[0] = top_tile;
+        score_tiles[HUD_SCORE_DIGITS] = (uint8_t)(top_tile + 1u);
+
+        remainder = (uint16_t)remaining;
+
+        for (i = 0; i < 4u; i++)
+        {
+            digit = 0;
+
+            while (remainder >= divisors[i])
+            {
+                remainder -= divisors[i];
+                digit++;
+            }
 
             top_tile = (uint8_t)(GFX_HUD_FIRST_DIGIT_TILE_ID + digit * 2u);
-
-            score_tiles[HUD_SCORE_DIGITS - 1 - i] = top_tile;
-
-            score_tiles[HUD_SCORE_DIGITS * 2 - 1 - i] =
-                (uint8_t)(top_tile + 1u);
+            score_tiles[i + 1u] = top_tile;
+            score_tiles[i + 1u + HUD_SCORE_DIGITS] = (uint8_t)(top_tile + 1u);
         }
 
         set_win_tiles(

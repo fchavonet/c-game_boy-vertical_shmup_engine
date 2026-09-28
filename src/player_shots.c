@@ -170,21 +170,41 @@ uint8_t shots_hit(
     uint8_t width,
     uint8_t height)
 {
-    uint8_t i;
+    static uint8_t i;
+    static Shot *shot;
+    static uint8_t origin_x;
+    static uint8_t origin_y;
+    static uint8_t extent_x;
+    static uint8_t extent_y;
 
-    for (i = 0; i < SHOT_COUNT; i++)
+    if (width == 0 || height == 0)
     {
-        if (shots[i].active)
+        return 0;
+    }
+
+    /*
+     * Coordinates stay within our 160 x 132 playfield and its
+     * small exit margins. Unsigned differences let each axis
+     * use one 8-bit comparison, including near negative edges.
+     */
+    origin_x = (uint8_t)(x - SHOT_WIDTH + 1);
+    origin_y = (uint8_t)(y - SHOT_HEIGHT + 1);
+    extent_x = (uint8_t)(width + SHOT_WIDTH - 1u);
+    extent_y = (uint8_t)(height + SHOT_HEIGHT - 1u);
+
+    for (i = 0, shot = shots; i < SHOT_COUNT; i++, shot++)
+    {
+        if (!shot->active)
         {
-            if (
-                shots[i].x < x + width &&
-                shots[i].x + SHOT_WIDTH > x &&
-                shots[i].y < y + height &&
-                shots[i].y + SHOT_HEIGHT > y)
-            {
-                shots[i].active = 0;
-                return 1;
-            }
+            continue;
+        }
+
+        if (
+            (uint8_t)(shot->x - origin_x) < extent_x &&
+            (uint8_t)(shot->y - origin_y) < extent_y)
+        {
+            shot->active = 0;
+            return 1;
         }
     }
 
