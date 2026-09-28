@@ -1,4 +1,5 @@
 #include "level_data.h"
+#include "enemy_shots.h"
 
 /*
  * Reusable movement paths.
@@ -41,7 +42,11 @@ static const BossDefinition level_one_boss = {
     35, /* Phase two shot interval */
 
     BOSS_SHOT_STRAIGHT,
-    BOSS_SHOT_DOUBLE};
+    BOSS_SHOT_DOUBLE,
+
+    SHOT_SPEED_2, /* Phase one projectile speed */
+    SHOT_SPEED_2  /* Phase two projectile speed */
+};
 
 static const SpawnEvent level_one_events[] = {
     /* Compare both paths immediately */
@@ -99,7 +104,11 @@ static const BossDefinition level_two_boss = {
     60, /* Phase two shot interval */
 
     BOSS_SHOT_AIMED,
-    BOSS_SHOT_SPREAD};
+    BOSS_SHOT_SPREAD,
+
+    SHOT_SPEED_1_5,  /* Phase one projectile speed */
+    SHOT_SPEED_1_75  /* Phase two projectile speed */
+};
 
 static const SpawnEvent level_two_events[] = {
     /* Crossing diagonals */

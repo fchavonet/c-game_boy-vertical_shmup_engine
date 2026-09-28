@@ -25,6 +25,9 @@ typedef struct
 
     BossShotMode phase_one_shot_mode;
     BossShotMode phase_two_shot_mode;
+
+    uint8_t phase_one_shot_speed; /* Sixteenths of a pixel */
+    uint8_t phase_two_shot_speed;
 } BossDefinition;
 
 void boss_init(void);

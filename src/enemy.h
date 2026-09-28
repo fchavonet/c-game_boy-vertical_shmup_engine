@@ -42,6 +42,7 @@ typedef struct
     EnemyShotMode shot_mode;
     uint8_t first_shot_delay;
     uint8_t shot_interval;
+    uint8_t shot_speed; /* Sixteenths of a pixel per update */
 
     uint16_t score_value;
     uint8_t tile_id;

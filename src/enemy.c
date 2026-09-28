@@ -49,6 +49,7 @@ const EnemyDefinition enemy_standard = {
     ENEMY_SHOT_NONE,
     0, /* First shot delay: unused */
     0, /* Shot interval: unused */
+    0, /* Shot speed: unused */
 
     100, /* Score value */
     GFX_ENEMY_TILE_ID};
@@ -60,6 +61,7 @@ const EnemyDefinition enemy_resistant = {
     ENEMY_SHOT_AIMED,
     30, /* First shot delay */
     45, /* Shot interval */
+    SHOT_SPEED_1_5,
 
     250, /* Score value */
     GFX_ENEMY_RESISTANT_TILE_ID};
@@ -71,6 +73,7 @@ const EnemyDefinition enemy_spread = {
     ENEMY_SHOT_SPREAD,
     45, /* First shot delay */
     90, /* Shot interval */
+    SHOT_SPEED_1_75,
 
     200, /* Score value */
     GFX_ENEMY_SPREAD_TILE_ID};
@@ -231,7 +234,8 @@ static void enemy_update_shooting(Enemy *enemy)
     case ENEMY_SHOT_STRAIGHT:
         enemy_shots_spawn(
             enemy->x + 2,
-            enemy->y + ENEMY_HEIGHT);
+            enemy->y + ENEMY_HEIGHT,
+            definition->shot_speed);
         break;
 
     case ENEMY_SHOT_AIMED:
@@ -243,14 +247,16 @@ static void enemy_update_shooting(Enemy *enemy)
                 enemy->x + 2,
                 enemy->y + ENEMY_HEIGHT,
                 player_get_center_x(),
-                player_get_center_y());
+                player_get_center_y(),
+                definition->shot_speed);
         }
         break;
 
     case ENEMY_SHOT_SPREAD:
         enemy_shots_spawn_spread(
             enemy->x + 2,
-            enemy->y + ENEMY_HEIGHT);
+            enemy->y + ENEMY_HEIGHT,
+            definition->shot_speed);
         break;
 
     default:

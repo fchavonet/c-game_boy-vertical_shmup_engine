@@ -10,18 +10,7 @@
 #define ENEMY_SHOT_HEIGHT 4
 
 #define SHOT_POSITION_SCALE 16
-#define ENEMY_SHOT_SPEED 2
-
-#define SHOT_FIXED_SPEED \
-    (ENEMY_SHOT_SPEED * SHOT_POSITION_SCALE)
-
 #define SPREAD_SHOT_COUNT 3u
-
-#define SPREAD_VELOCITY_X \
-    (SHOT_FIXED_SPEED / 2)
-
-#define SPREAD_VELOCITY_Y \
-    ((SHOT_FIXED_SPEED * 7) / 8)
 
 typedef struct
 {
@@ -136,20 +125,26 @@ void enemy_shots_init(void)
     }
 }
 
-void enemy_shots_spawn(int16_t x, int16_t y)
+void enemy_shots_spawn(int16_t x, int16_t y, uint8_t speed)
 {
+    if (speed < SHOT_SPEED_MIN || speed > SHOT_SPEED_MAX)
+    {
+        return;
+    }
+
     spawn_with_velocity(
         x,
         y,
         0,
-        SHOT_FIXED_SPEED);
+        speed);
 }
 
 void enemy_shots_spawn_aimed(
     int16_t x,
     int16_t y,
     int16_t target_x,
-    int16_t target_y)
+    int16_t target_y,
+    uint8_t speed)
 {
     static int16_t delta_x;
     static int16_t delta_y;
@@ -161,6 +156,11 @@ void enemy_shots_spawn_aimed(
     static uint16_t absolute_y;
     static uint16_t distance_squared;
     static uint16_t distance;
+
+    if (speed < SHOT_SPEED_MIN || speed > SHOT_SPEED_MAX)
+    {
+        return;
+    }
 
     if (!shot_position_is_valid(x, y))
     {
@@ -205,15 +205,26 @@ void enemy_shots_spawn_aimed(
 
     if (distance == 0u)
     {
-        enemy_shots_spawn(x, y);
+        enemy_shots_spawn(x, y, speed);
         return;
     }
 
-    velocity_x =
-        (delta_x * SHOT_FIXED_SPEED) / (int16_t)distance;
+    /* Magnitudes fit in one byte inside the playfield. */
+    velocity_x = (int16_t)(
+        (uint16_t)((uint8_t)absolute_x * speed) / distance);
 
-    velocity_y =
-        (delta_y * SHOT_FIXED_SPEED) / (int16_t)distance;
+    velocity_y = (int16_t)(
+        (uint16_t)((uint8_t)absolute_y * speed) / distance);
+
+    if (delta_x < 0)
+    {
+        velocity_x = -velocity_x;
+    }
+
+    if (delta_y < 0)
+    {
+        velocity_y = -velocity_y;
+    }
 
     spawn_with_velocity(
         x,
@@ -222,10 +233,17 @@ void enemy_shots_spawn_aimed(
         velocity_y);
 }
 
-void enemy_shots_spawn_spread(int16_t x, int16_t y)
+void enemy_shots_spawn_spread(int16_t x, int16_t y, uint8_t speed)
 {
     static uint8_t i;
     static uint8_t available;
+    static int16_t side_x;
+    static int16_t side_y;
+
+    if (speed < SHOT_SPEED_MIN || speed > SHOT_SPEED_MAX)
+    {
+        return;
+    }
 
     available = 0;
 
@@ -251,23 +269,26 @@ void enemy_shots_spawn_spread(int16_t x, int16_t y)
         return;
     }
 
+    side_x = speed >> 1u;
+    side_y = ((uint16_t)speed * 7u) >> 3u;
+
     spawn_with_velocity(
         x,
         y,
-        -SPREAD_VELOCITY_X,
-        SPREAD_VELOCITY_Y);
+        -side_x,
+        side_y);
 
     spawn_with_velocity(
         x,
         y,
         0,
-        SHOT_FIXED_SPEED);
+        speed);
 
     spawn_with_velocity(
         x,
         y,
-        SPREAD_VELOCITY_X,
-        SPREAD_VELOCITY_Y);
+        side_x,
+        side_y);
 }
 
 void enemy_shots_update(void)

@@ -60,24 +60,27 @@ static const uint8_t boss_tile[] = {
 /*
  * Execute the attack selected by the current phase.
  */
-static void boss_fire(BossShotMode mode)
+static void boss_fire(BossShotMode mode, uint8_t speed)
 {
     switch (mode)
     {
     case BOSS_SHOT_STRAIGHT:
         enemy_shots_spawn(
             boss_x + 6,
-            boss_y + BOSS_HEIGHT);
+            boss_y + BOSS_HEIGHT,
+            speed);
         break;
 
     case BOSS_SHOT_DOUBLE:
         enemy_shots_spawn(
             boss_x + 1,
-            boss_y + BOSS_HEIGHT);
+            boss_y + BOSS_HEIGHT,
+            speed);
 
         enemy_shots_spawn(
             boss_x + 11,
-            boss_y + BOSS_HEIGHT);
+            boss_y + BOSS_HEIGHT,
+            speed);
         break;
 
     case BOSS_SHOT_AIMED:
@@ -89,14 +92,16 @@ static void boss_fire(BossShotMode mode)
                 boss_x + 6,
                 boss_y + BOSS_HEIGHT,
                 player_get_center_x(),
-                player_get_center_y());
+                player_get_center_y(),
+                speed);
         }
         break;
 
     case BOSS_SHOT_SPREAD:
         enemy_shots_spawn_spread(
             boss_x + 6,
-            boss_y + BOSS_HEIGHT);
+            boss_y + BOSS_HEIGHT,
+            speed);
         break;
 
     case BOSS_SHOT_NONE:
@@ -179,6 +184,7 @@ void boss_update(void)
     uint8_t speed;
     uint8_t shot_interval;
     BossShotMode shot_mode;
+    uint8_t shot_speed;
 
     if (
         boss_state == BOSS_WAITING ||
@@ -244,12 +250,14 @@ void boss_update(void)
     speed = boss_definition->phase_one_speed;
     shot_interval = boss_definition->phase_one_shot_interval;
     shot_mode = boss_definition->phase_one_shot_mode;
+    shot_speed = boss_definition->phase_one_shot_speed;
 
     if (boss_hp <= boss_definition->phase_two_hp)
     {
         speed = boss_definition->phase_two_speed;
         shot_interval = boss_definition->phase_two_shot_interval;
         shot_mode = boss_definition->phase_two_shot_mode;
+        shot_speed = boss_definition->phase_two_shot_speed;
 
         if (shot_timer > shot_interval)
         {
@@ -286,7 +294,7 @@ void boss_update(void)
 
     if (shot_timer == 0)
     {
-        boss_fire(shot_mode);
+        boss_fire(shot_mode, shot_speed);
         shot_timer = shot_interval;
     }
 }
