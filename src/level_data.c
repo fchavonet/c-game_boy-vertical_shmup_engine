@@ -31,6 +31,35 @@ static const EnemyPath attack_exit_right = {
  * Level one.
  */
 
+/* Each action: duration, movement, movement speed, shot mode,
+ * first-shot delay, shot interval, projectile speed, salvo attempt limit.
+ * Sequences loop. A phase change restarts at its first action.
+ */
+static const BossAction patrol_actions[] = {
+    {90, BOSS_MOVE_SWEEP, 1, BOSS_SHOT_STRAIGHT, 30, 30, SHOT_SPEED_2, 0},
+    {90, BOSS_MOVE_HOLD, 0, BOSS_SHOT_AIMED, 15, 30, SHOT_SPEED_1_5, 3},
+    {45, BOSS_MOVE_SWEEP, 2, BOSS_SHOT_NONE, 0, 0, 0, 0},
+    {60, BOSS_MOVE_HOLD, 0, BOSS_SHOT_SPREAD, 15, 30, SHOT_SPEED_1_75, 2}};
+static const BossSequence patrol_sequence = {
+    patrol_actions, sizeof(patrol_actions) / sizeof(patrol_actions[0])};
+
+static const BossAction assault_actions[] = {
+    {70, BOSS_MOVE_SWEEP, 2, BOSS_SHOT_DOUBLE, 20, 25, SHOT_SPEED_2, 0},
+    {24, BOSS_MOVE_HOLD, 0, BOSS_SHOT_NONE, 0, 0, 0, 0},
+    {90, BOSS_MOVE_HOLD, 0, BOSS_SHOT_SPREAD, 1, 30, SHOT_SPEED_1_75, 3},
+    {40, BOSS_MOVE_SWEEP, 2, BOSS_SHOT_NONE, 0, 0, 0, 0}};
+static const BossSequence assault_sequence = {
+    assault_actions, sizeof(assault_actions) / sizeof(assault_actions[0])};
+
+static const BossAction dive_actions[] = {
+    {60, BOSS_MOVE_SWEEP, 2, BOSS_SHOT_AIMED, 15, 30, SHOT_SPEED_1_5, 2},
+    {24, BOSS_MOVE_DOWN, 1, BOSS_SHOT_NONE, 0, 0, 0, 0},
+    {90, BOSS_MOVE_HOLD, 0, BOSS_SHOT_SPREAD, 15, 30, SHOT_SPEED_1_75, 3},
+    {24, BOSS_MOVE_UP, 1, BOSS_SHOT_NONE, 0, 0, 0, 0},
+    {30, BOSS_MOVE_HOLD, 0, BOSS_SHOT_NONE, 0, 0, 0, 0}};
+static const BossSequence dive_sequence = {
+    dive_actions, sizeof(dive_actions) / sizeof(dive_actions[0])};
+
 static const BossDefinition level_one_boss = {
     24, /* Initial health */
     12, /* Phase two health threshold */
@@ -45,7 +74,9 @@ static const BossDefinition level_one_boss = {
     BOSS_SHOT_DOUBLE,
 
     SHOT_SPEED_2, /* Phase one projectile speed */
-    SHOT_SPEED_2  /* Phase two projectile speed */
+    SHOT_SPEED_2, /* Phase two projectile speed */
+    &patrol_sequence,
+    &assault_sequence
 };
 
 /* Reusable recipes: type, movement, path, formation, count, interval. */
@@ -106,7 +137,9 @@ static const BossDefinition level_two_boss = {
     BOSS_SHOT_SPREAD,
 
     SHOT_SPEED_1_5,  /* Phase one projectile speed */
-    SHOT_SPEED_1_75  /* Phase two projectile speed */
+    SHOT_SPEED_1_75, /* Phase two projectile speed */
+    &patrol_sequence,
+    &dive_sequence
 };
 
 static const SpawnEvent level_two_events[] = {

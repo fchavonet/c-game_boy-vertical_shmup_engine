@@ -17,6 +17,9 @@
 #define BOSS_MAX_X \
     (GAME_PLAYFIELD_WIDTH - BOSS_WIDTH - BOSS_MIN_X)
 
+#define BOSS_MIN_Y 16
+#define BOSS_MAX_Y 64
+
 #define BOSS_HIT_FLASH_DURATION 6
 #define BOSS_SCORE_VALUE 1000
 
@@ -46,6 +49,15 @@ static uint8_t boss_hp;
 static uint8_t shot_timer;
 static uint8_t hit_flash_timer;
 static uint8_t destruction_timer;
+
+static const BossSequence *phase_sequences[2];
+static const BossSequence *active_sequence;
+static const BossAction *active_action;
+static uint16_t action_remaining;
+static uint8_t action_index;
+static uint8_t action_salvos;
+static uint8_t active_phase;
+static uint8_t invalid_sequence_count;
 
 static const uint8_t boss_tile[] = {
     0xFF, 0xFF,
@@ -110,10 +122,150 @@ static void boss_fire(BossShotMode mode, uint8_t speed)
     }
 }
 
+/* Checked once when the boss starts, not inside the frame loop. */
+static uint8_t boss_sequence_valid(const BossSequence *sequence)
+{
+    uint8_t i;
+    const BossAction *action;
+
+    if (sequence->actions == 0 || sequence->action_count == 0 ||
+        sequence->action_count > BOSS_SEQUENCE_MAX_ACTIONS)
+    {
+        return 0;
+    }
+    for (i = 0; i < sequence->action_count; i++)
+    {
+        action = &sequence->actions[i];
+        if (action->duration == 0 || action->movement > BOSS_MOVE_DOWN ||
+            action->speed > 4u || action->shot_mode > BOSS_SHOT_SPREAD)
+        {
+            return 0;
+        }
+        if (action->shot_mode != BOSS_SHOT_NONE &&
+            (action->shot_interval == 0 || action->shot_speed < SHOT_SPEED_MIN ||
+             action->shot_speed > SHOT_SPEED_MAX))
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static void boss_begin_action(void)
+{
+    active_action = &active_sequence->actions[action_index];
+    action_remaining = active_action->duration;
+    action_salvos = 0;
+    shot_timer = active_action->first_shot_delay;
+}
+
+static void boss_sequence_update(void)
+{
+    static uint8_t speed;
+
+    if (action_remaining == 0)
+    {
+        action_index++;
+        if (action_index >= active_sequence->action_count)
+        {
+            action_index = 0;
+        }
+        boss_begin_action();
+    }
+
+    speed = active_action->speed;
+    switch (active_action->movement)
+    {
+    case BOSS_MOVE_SWEEP:
+        if (direction_x < 0)
+        {
+            boss_x -= speed;
+        }
+        else
+        {
+            boss_x += speed;
+        }
+        break;
+    case BOSS_MOVE_LEFT:
+        boss_x -= speed;
+        direction_x = -1;
+        break;
+    case BOSS_MOVE_RIGHT:
+        boss_x += speed;
+        direction_x = 1;
+        break;
+    case BOSS_MOVE_UP:
+        boss_y -= speed;
+        break;
+    case BOSS_MOVE_DOWN:
+        boss_y += speed;
+        break;
+    default:
+        break;
+    }
+
+    if (boss_x <= BOSS_MIN_X)
+    {
+        boss_x = BOSS_MIN_X;
+        direction_x = 1;
+    }
+    else if (boss_x >= BOSS_MAX_X)
+    {
+        boss_x = BOSS_MAX_X;
+        direction_x = -1;
+    }
+    if (boss_y < BOSS_MIN_Y)
+    {
+        boss_y = BOSS_MIN_Y;
+    }
+    else if (boss_y > BOSS_MAX_Y)
+    {
+        boss_y = BOSS_MAX_Y;
+    }
+
+    action_remaining--;
+    if (active_action->shot_mode == BOSS_SHOT_NONE)
+    {
+        return;
+    }
+    if (active_action->salvos != 0 && action_salvos >= active_action->salvos)
+    {
+        return;
+    }
+    if (shot_timer > 0)
+    {
+        shot_timer--;
+    }
+    if (shot_timer == 0)
+    {
+        boss_fire(active_action->shot_mode, active_action->shot_speed);
+        shot_timer = active_action->shot_interval;
+        if (active_action->salvos != 0)
+        {
+            action_salvos++;
+        }
+    }
+}
+
+uint8_t boss_get_invalid_sequence_count(void)
+{
+    return invalid_sequence_count;
+}
+
 void boss_init(void)
 {
     uint8_t i;
     uint8_t sprite_id;
+
+    active_sequence = 0;
+    active_action = 0;
+    phase_sequences[0] = 0;
+    phase_sequences[1] = 0;
+    action_remaining = 0;
+    action_index = 0;
+    action_salvos = 0;
+    active_phase = 255u;
+    invalid_sequence_count = 0;
 
     boss_definition = 0;
     boss_state = BOSS_WAITING;
@@ -144,6 +296,7 @@ void boss_init(void)
 
 void boss_start(const BossDefinition *definition)
 {
+    uint8_t i;
     if (boss_state != BOSS_WAITING)
     {
         return;
@@ -160,6 +313,20 @@ void boss_start(const BossDefinition *definition)
     }
 
     boss_definition = definition;
+    phase_sequences[0] = definition->phase_one_sequence;
+    phase_sequences[1] = definition->phase_two_sequence;
+    invalid_sequence_count = 0;
+    for (i = 0; i < 2u; i++)
+    {
+        if (phase_sequences[i] != 0 && !boss_sequence_valid(phase_sequences[i]))
+        {
+            phase_sequences[i] = 0;
+            invalid_sequence_count++;
+        }
+    }
+    active_phase = 255u;
+    active_sequence = 0;
+    active_action = 0;
 
     boss_x = (GAME_PLAYFIELD_WIDTH - BOSS_WIDTH) / 2;
     boss_y = -BOSS_HEIGHT;
@@ -185,6 +352,7 @@ void boss_update(void)
     uint8_t shot_interval;
     BossShotMode shot_mode;
     uint8_t shot_speed;
+    uint8_t phase;
 
     if (
         boss_state == BOSS_WAITING ||
@@ -244,6 +412,35 @@ void boss_update(void)
         }
     }
 
+    phase = 0;
+    if (boss_hp <= boss_definition->phase_two_hp)
+    {
+        phase = 1;
+    }
+    if (phase != active_phase)
+    {
+        active_phase = phase;
+        active_sequence = phase_sequences[phase];
+        action_index = 0;
+        if (active_sequence != 0)
+        {
+            boss_begin_action();
+        }
+        else
+        {
+            shot_timer = boss_definition->phase_one_shot_interval;
+            if (phase == 1)
+            {
+                shot_timer = boss_definition->phase_two_shot_interval;
+            }
+        }
+    }
+    if (active_sequence != 0)
+    {
+        boss_sequence_update();
+        return;
+    }
+
     /*
      * Select all parameters from the current phase.
      */
@@ -265,7 +462,14 @@ void boss_update(void)
         }
     }
 
-    boss_x += direction_x * speed;
+    if (direction_x < 0)
+    {
+        boss_x -= speed;
+    }
+    else
+    {
+        boss_x += speed;
+    }
 
     if (boss_x <= BOSS_MIN_X)
     {
