@@ -23,6 +23,8 @@ typedef struct
 {
     int16_t x;
     int16_t y;
+    int16_t fixed_x; /* Sixteenths; x/y cache the pixel coordinates. */
+    int16_t fixed_y;
 
     const EnemyDefinition *definition;
     const EnemyPath *path;
@@ -44,7 +46,7 @@ static Enemy enemies[ENEMY_COUNT];
 
 const EnemyDefinition enemy_standard = {
     1, /* Initial health */
-    1, /* Movement speed */
+    ENEMY_SPEED_1, /* Movement speed per axis */
 
     ENEMY_SHOT_NONE,
     0, /* First shot delay: unused */
@@ -56,7 +58,7 @@ const EnemyDefinition enemy_standard = {
 
 const EnemyDefinition enemy_resistant = {
     3, /* Initial health */
-    1, /* Movement speed */
+    ENEMY_SPEED_0_75, /* Movement speed per axis */
 
     ENEMY_SHOT_AIMED,
     30, /* First shot delay */
@@ -68,7 +70,7 @@ const EnemyDefinition enemy_resistant = {
 
 const EnemyDefinition enemy_spread = {
     2, /* Initial health */
-    1, /* Movement speed */
+    ENEMY_SPEED_1_5, /* Movement speed per axis */
 
     ENEMY_SHOT_SPREAD,
     45, /* First shot delay */
@@ -145,20 +147,20 @@ static uint8_t enemy_update_sequence(Enemy *enemy)
 
     if (step->direction_x < 0)
     {
-        enemy->x -= enemy->definition->speed;
+        enemy->fixed_x -= enemy->definition->speed;
     }
     else if (step->direction_x > 0)
     {
-        enemy->x += enemy->definition->speed;
+        enemy->fixed_x += enemy->definition->speed;
     }
 
     if (step->direction_y < 0)
     {
-        enemy->y -= enemy->definition->speed;
+        enemy->fixed_y -= enemy->definition->speed;
     }
     else if (step->direction_y > 0)
     {
-        enemy->y += enemy->definition->speed;
+        enemy->fixed_y += enemy->definition->speed;
     }
 
     can_shoot = step->can_shoot;
@@ -178,15 +180,15 @@ static uint8_t enemy_update_movement(Enemy *enemy)
     /*
      * Existing continuous movements.
      */
-    enemy->y += enemy->definition->speed;
+    enemy->fixed_y += enemy->definition->speed;
 
     if (enemy->direction_x < 0)
     {
-        enemy->x -= enemy->definition->speed;
+        enemy->fixed_x -= enemy->definition->speed;
     }
     else if (enemy->direction_x > 0)
     {
-        enemy->x += enemy->definition->speed;
+        enemy->fixed_x += enemy->definition->speed;
     }
 
     if (enemy->movement == ENEMY_MOVE_ZIGZAG)
@@ -290,6 +292,8 @@ void enemy_init(void)
     {
         enemies[i].x = 0;
         enemies[i].y = 0;
+        enemies[i].fixed_x = 0;
+        enemies[i].fixed_y = 0;
 
         enemies[i].definition = 0;
         enemies[i].path = 0;
@@ -313,15 +317,13 @@ void enemy_init(void)
     }
 }
 
-uint8_t enemy_spawn(
+uint8_t enemy_can_spawn(
     uint8_t x,
     uint8_t y,
     EnemyMovement movement,
     const EnemyDefinition *definition,
     const EnemyPath *path)
 {
-    uint8_t i;
-
     if (definition == 0)
     {
         return 0;
@@ -329,7 +331,8 @@ uint8_t enemy_spawn(
 
     if (
         definition->start_hp == 0 ||
-        definition->speed == 0)
+        definition->speed < ENEMY_SPEED_MIN ||
+        definition->speed > ENEMY_SPEED_MAX)
     {
         return 0;
     }
@@ -380,35 +383,80 @@ uint8_t enemy_spawn(
         return 0;
     }
 
+    return 1;
+}
+
+uint8_t enemy_free_count(void)
+{
+    uint8_t i;
+    uint8_t count = 0;
+
     for (i = 0; i < ENEMY_COUNT; i++)
     {
         if (!enemies[i].active)
         {
-            enemies[i].x = x;
-            enemies[i].y = y;
+            count++;
+        }
+    }
 
-            enemies[i].definition = definition;
-            enemies[i].path = path;
+    return count;
+}
 
-            enemies[i].hp = definition->start_hp;
-            enemies[i].hit_flash_timer = 0;
+uint8_t enemy_spawn(
+    uint8_t x,
+    uint8_t y,
+    EnemyMovement movement,
+    const EnemyDefinition *definition,
+    const EnemyPath *path)
+{
+    if (!enemy_can_spawn(x, y, movement, definition, path))
+    {
+        return 0;
+    }
+    return enemy_spawn_validated(x, y, movement, definition, path);
+}
 
-            enemies[i].movement = movement;
-            enemies[i].movement_timer = 0;
-            enemies[i].movement_step = 0;
+uint8_t enemy_spawn_validated(
+    uint8_t x,
+    uint8_t y,
+    EnemyMovement movement,
+    const EnemyDefinition *definition,
+    const EnemyPath *path)
+{
+    static uint8_t i;
+    static Enemy *enemy;
 
-            enemies[i].shot_timer = definition->first_shot_delay;
-            enemies[i].direction_x = 0;
+    for (i = 0, enemy = enemies; i < ENEMY_COUNT; i++, enemy++)
+    {
+        if (!enemy->active)
+        {
+            enemy->x = x;
+            enemy->y = y;
+            enemy->fixed_x = (int16_t)((uint16_t)x << 4);
+            enemy->fixed_y = (int16_t)((uint16_t)y << 4);
+
+            enemy->definition = definition;
+            enemy->path = path;
+
+            enemy->hp = definition->start_hp;
+            enemy->hit_flash_timer = 0;
+
+            enemy->movement = movement;
+            enemy->movement_timer = 0;
+            enemy->movement_step = 0;
+
+            enemy->shot_timer = definition->first_shot_delay;
+            enemy->direction_x = 0;
 
             switch (movement)
             {
             case ENEMY_MOVE_DIAGONAL_LEFT:
-                enemies[i].direction_x = -1;
+                enemy->direction_x = -1;
                 break;
 
             case ENEMY_MOVE_DIAGONAL_RIGHT:
             case ENEMY_MOVE_ZIGZAG:
-                enemies[i].direction_x = 1;
+                enemy->direction_x = 1;
                 break;
 
             default:
@@ -419,7 +467,7 @@ uint8_t enemy_spawn(
                 GFX_ENEMY_FIRST_SPRITE_ID + i,
                 definition->tile_id);
 
-            enemies[i].active = 1;
+            enemy->active = 1;
             return 1;
         }
     }
@@ -454,6 +502,12 @@ void enemy_update(void)
         {
             continue;
         }
+
+        /* SDCC uses an arithmetic right shift for signed positions.
+         * Convert once per update, including positions above/left of the screen.
+         */
+        enemy->x = enemy->fixed_x >> 4;
+        enemy->y = enemy->fixed_y >> 4;
 
         if (
             enemy->y <= -ENEMY_HEIGHT ||

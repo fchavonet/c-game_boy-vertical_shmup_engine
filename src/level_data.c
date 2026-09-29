@@ -48,36 +48,33 @@ static const BossDefinition level_one_boss = {
     SHOT_SPEED_2  /* Phase two projectile speed */
 };
 
+/* Reusable recipes: type, movement, path, formation, count, interval. */
+static const WaveDefinition standard_train = {
+    &enemy_standard, ENEMY_MOVE_DOWN, 0, &wave_single, 5, 20};
+static const WaveDefinition standard_line = {
+    &enemy_standard, ENEMY_MOVE_DOWN, 0, &wave_line_5, 5, 0};
+static const WaveDefinition standard_v = {
+    &enemy_standard, ENEMY_MOVE_DOWN, 0, &wave_v_5, 5, 0};
+static const WaveDefinition standard_inverted_v = {
+    &enemy_standard, ENEMY_MOVE_DOWN, 0, &wave_inverted_v_5, 5, 0};
+static const WaveDefinition crossing_right = {
+    &enemy_standard, ENEMY_MOVE_DIAGONAL_RIGHT, 0, &wave_single, 3, 30};
+static const WaveDefinition crossing_left = {
+    &enemy_standard, ENEMY_MOVE_DIAGONAL_LEFT, 0, &wave_single, 3, 30};
+static const WaveDefinition resistant_train = {
+    &enemy_resistant, ENEMY_MOVE_SEQUENCE, &attack_exit_left,
+    &wave_single, 3, 45};
+
+/* Individual events remain available for unique enemies or escorts. */
 static const SpawnEvent level_one_events[] = {
-    /* Compare both paths immediately */
-    {60, 32, 0, ENEMY_MOVE_DOWN, &enemy_standard, 0},
-    {60, 76, 0,
-     ENEMY_MOVE_SEQUENCE,
-     &enemy_resistant,
-     &attack_exit_left},
-    {60, 120, 0,
-     ENEMY_MOVE_SEQUENCE,
-     &enemy_spread,
-     &attack_exit_right},
+    {800, 76, 0, ENEMY_MOVE_SEQUENCE, &enemy_resistant, &attack_exit_left},
+    {800, 120, 0, ENEMY_MOVE_SEQUENCE, &enemy_spread, &attack_exit_right}};
 
-    /* Left diagonals */
-    {240, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard, 0},
-    {285, 120, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard, 0},
-
-    /* Right diagonals */
-    {480, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard, 0},
-    {525, 32, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard, 0},
-
-    /* Two attackers sharing the same timing */
-    {
-        720, 32, 0,
-        ENEMY_MOVE_SEQUENCE,
-        &enemy_spread,
-        &attack_exit_left},
-    {720, 96, 0,
-     ENEMY_MOVE_SEQUENCE,
-     &enemy_resistant,
-     &attack_exit_right}};
+static const WaveEvent level_one_waves[] = {
+    {60, 76, 0, &standard_train},
+    {300, 76, 0, &standard_line},
+    {480, 76, 0, &standard_v},
+    {660, 76, 0, &standard_inverted_v}};
 
 const LevelDefinition level_one = {
     level_one_events,
@@ -87,7 +84,9 @@ const LevelDefinition level_one = {
 
     900,
 
-    &level_one_boss};
+    &level_one_boss,
+    level_one_waves,
+    sizeof(level_one_waves) / sizeof(level_one_waves[0])};
 
 /*
  * Level two.
@@ -111,43 +110,15 @@ static const BossDefinition level_two_boss = {
 };
 
 static const SpawnEvent level_two_events[] = {
-    /* Crossing diagonals */
-    {60, 24, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard, 0},
-    {60, 128, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard, 0},
-
-    {110, 24, 0, ENEMY_MOVE_DIAGONAL_RIGHT, &enemy_standard, 0},
-    {110, 128, 0, ENEMY_MOVE_DIAGONAL_LEFT, &enemy_standard, 0},
-
-    /* Attackers leave in opposite directions */
-    {300, 16, 0, ENEMY_MOVE_DOWN, &enemy_standard, 0},
-    {300, 56, 0,
-     ENEMY_MOVE_SEQUENCE,
-     &enemy_resistant,
-     &attack_exit_left},
-    {300, 96, 0,
-     ENEMY_MOVE_SEQUENCE,
-     &enemy_spread,
-     &attack_exit_right},
-    {300, 136, 0, ENEMY_MOVE_DOWN, &enemy_standard, 0},
-
-    /* Stopping attacker and zigzag escorts */
-    {540, 16, 0, ENEMY_MOVE_ZIGZAG, &enemy_standard, 0},
-    {540, 64, 0,
-     ENEMY_MOVE_SEQUENCE,
-     &enemy_spread,
-     &attack_exit_right},
     {540, 112, 0, ENEMY_MOVE_ZIGZAG, &enemy_standard, 0},
+    {780, 112, 0, ENEMY_MOVE_SEQUENCE, &enemy_spread, &attack_exit_right}};
 
-    /* Final armed pair */
-    {
-        780, 40, 0,
-        ENEMY_MOVE_SEQUENCE,
-        &enemy_resistant,
-        &attack_exit_left},
-    {780, 112, 0,
-     ENEMY_MOVE_SEQUENCE,
-     &enemy_spread,
-     &attack_exit_right}};
+static const WaveEvent level_two_waves[] = {
+    {60, 24, 0, &crossing_right},
+    {60, 128, 0, &crossing_left},
+    {300, 76, 0, &standard_v},
+    {540, 40, 0, &resistant_train},
+    {780, 76, 0, &standard_line}};
 
 const LevelDefinition level_two = {
     level_two_events,
@@ -157,7 +128,9 @@ const LevelDefinition level_two = {
 
     960,
 
-    &level_two_boss};
+    &level_two_boss,
+    level_two_waves,
+    sizeof(level_two_waves) / sizeof(level_two_waves[0])};
 
 /*
  * Campaign order.

@@ -3,6 +3,15 @@
 
 #include <stdint.h>
 
+/* Movement speed per axis, in sixteenths of a pixel per update. */
+#define ENEMY_SPEED_0_5 8u
+#define ENEMY_SPEED_0_75 12u
+#define ENEMY_SPEED_1 16u
+#define ENEMY_SPEED_1_5 24u
+#define ENEMY_SPEED_2 32u
+#define ENEMY_SPEED_MIN 1u
+#define ENEMY_SPEED_MAX 64u
+
 typedef enum
 {
     ENEMY_MOVE_DOWN,
@@ -37,7 +46,7 @@ typedef struct
 typedef struct
 {
     uint8_t start_hp;
-    uint8_t speed;
+    uint8_t speed; /* Use ENEMY_SPEED_* constants, not whole pixels. */
 
     EnemyShotMode shot_mode;
     uint8_t first_shot_delay;
@@ -55,6 +64,27 @@ extern const EnemyDefinition enemy_spread;
 void enemy_init(void);
 
 uint8_t enemy_spawn(
+    uint8_t x,
+    uint8_t y,
+    EnemyMovement movement,
+    const EnemyDefinition *definition,
+    const EnemyPath *path);
+
+/* Validate parameters independently of available enemy slots. */
+uint8_t enemy_can_spawn(
+    uint8_t x,
+    uint8_t y,
+    EnemyMovement movement,
+    const EnemyDefinition *definition,
+    const EnemyPath *path);
+
+uint8_t enemy_free_count(void);
+
+/* Internal wave-scheduler fast path: arguments MUST have passed
+ * enemy_can_spawn(), and immutable definitions must remain valid.
+ * Still checks pool capacity; does not allocate memory.
+ */
+uint8_t enemy_spawn_validated(
     uint8_t x,
     uint8_t y,
     EnemyMovement movement,
