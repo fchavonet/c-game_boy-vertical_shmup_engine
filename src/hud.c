@@ -114,11 +114,9 @@ void hud_init(void)
     LCDC_REG &= (uint8_t)~(LCDCF_BG8000 | LCDCF_BG9C00);
     LCDC_REG |= LCDCF_WIN9C00;
 
-    BGP_REG = DMG_PALETTE(
-        DMG_WHITE,
-        DMG_LITE_GRAY,
-        DMG_DARK_GRAY,
-        DMG_BLACK);
+    /* Palette ownership belongs to transition.c: keep the image black
+     * while loading the HUD and background for a new level.
+     */
 
     set_bkg_data(
         GFX_HUD_BLANK_TILE_ID,

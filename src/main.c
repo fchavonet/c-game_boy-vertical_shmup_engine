@@ -16,6 +16,7 @@
 #include "background.h"
 #include "pause_indicator.h"
 #include "effects.h"
+#include "transition.h"
 
 void main(void)
 {
@@ -25,14 +26,19 @@ void main(void)
     uint8_t paused;
     uint8_t level_index;
 
+    transition_init();
+
     gotoxy(3, 8);
     printf("VERTICAL SHMUP");
 
     gotoxy(7, 9);
     printf("ENGINE");
 
+    transition_fade_in();
+
     waitpad(J_START);
     waitpadup();
+    transition_fade_out();
 
     while (1)
     {
@@ -40,22 +46,13 @@ void main(void)
 
         while (level_index < LEVEL_COUNT)
         {
-            DISPLAY_OFF;
-
             hud_hide();
 
-            HIDE_BKG;
             HIDE_SPRITES;
 
             move_bkg(0, 0);
 
             SPRITES_8x8;
-
-            OBP0_REG = DMG_PALETTE(
-                DMG_WHITE,
-                DMG_LITE_GRAY,
-                DMG_DARK_GRAY,
-                DMG_BLACK);
 
             previous_buttons = 0;
             paused = 0;
@@ -90,7 +87,9 @@ void main(void)
             background_render();
 
             SHOW_SPRITES;
-            DISPLAY_ON;
+            transition_fade_in();
+            /* A Start press during a fade must not pause the new game. */
+            previous_buttons = joypad();
 
             while (
                 (player_is_alive() || player_is_destroying()) &&
@@ -154,7 +153,7 @@ void main(void)
                 background_render();
             }
 
-            DISPLAY_OFF;
+            transition_fade_out();
 
             hud_hide();
             HIDE_SPRITES;
@@ -183,11 +182,12 @@ void main(void)
             printf("PRESS START...");
 
             SHOW_BKG;
-            DISPLAY_ON;
+            transition_fade_in();
 
             waitpadup();
             waitpad(J_START);
             waitpadup();
+            transition_fade_out();
 
             if (!player_is_alive())
             {
