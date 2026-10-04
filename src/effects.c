@@ -1,3 +1,4 @@
+#include "explosion_sprite.h"
 #include <gb/gb.h>
 
 #include "game_config.h"
@@ -23,42 +24,7 @@ typedef struct
 
 static Effect effects[EFFECT_COUNT];
 
-static const uint8_t explosion_tiles[] = {
-    /*
-     * Frame 0: small central flash.
-     */
-    0x00, 0x00,
-    0x00, 0x00,
-    0x18, 0x18,
-    0x3C, 0x3C,
-    0x3C, 0x3C,
-    0x18, 0x18,
-    0x00, 0x00,
-    0x00, 0x00,
 
-    /*
-     * Frame 1: expanding burst.
-     */
-    0x24, 0x24,
-    0x18, 0x18,
-    0x5A, 0x5A,
-    0x3C, 0x3C,
-    0x3C, 0x3C,
-    0x5A, 0x5A,
-    0x18, 0x18,
-    0x24, 0x24,
-
-    /*
-     * Frame 2: scattered fragments.
-     */
-    0x81, 0x81,
-    0x24, 0x24,
-    0x00, 0x00,
-    0x42, 0x42,
-    0x42, 0x42,
-    0x00, 0x00,
-    0x24, 0x24,
-    0x81, 0x81};
 
 void effects_init(void)
 {
@@ -68,7 +34,7 @@ void effects_init(void)
     set_sprite_data(
         GFX_EXPLOSION_FIRST_TILE_ID,
         GFX_EXPLOSION_TILE_COUNT,
-        explosion_tiles);
+        explosion_sprite_tiles);
 
     for (i = 0; i < EFFECT_COUNT; i++)
     {

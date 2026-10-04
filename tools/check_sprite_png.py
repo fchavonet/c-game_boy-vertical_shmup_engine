@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check the 8x8 indexed PNG contract before calling GBDK png2asset.
+"""Check an indexed PNG and its exact dimensions before calling GBDK png2asset.
 Uses only the Python standard library. Pixel decoding is done by png2asset.
 """
 import struct
@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 
-def validate(path):
+def validate(path, expected_width, expected_height):
     data = Path(path).read_bytes()
     if data[:8] != b"\x89PNG\r\n\x1a\n":
         raise ValueError("Expected a PNG file.")
@@ -34,8 +34,8 @@ def validate(path):
     if header is None or len(header) != 13:
         raise ValueError("Missing or invalid PNG header.")
     width, height, depth, mode, _, _, _ = struct.unpack(">IIBBBBB", header)
-    if (width, height) != (8, 8):
-        raise ValueError("Player image must be exactly 8x8 pixels.")
+    if (width, height) != (expected_width, expected_height):
+        raise ValueError(f"Image must be exactly {expected_width}x{expected_height} pixels.")
     if mode != 3 or depth not in (1, 2, 4, 8):
         raise ValueError("Export as an indexed-color PNG, preserving the template palette.")
     expected = bytes([255, 255, 255, 170, 170, 170, 85, 85, 85, 0, 0, 0])
@@ -52,9 +52,9 @@ def validate(path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python3 tools/check_player_png.py assets/player.png")
+    if len(sys.argv) != 4:
+        sys.exit("Usage: python3 tools/check_sprite_png.py IMAGE WIDTH HEIGHT")
     try:
-        validate(sys.argv[1])
+        validate(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))
     except (OSError, ValueError) as error:
-        sys.exit("Player PNG: " + str(error))
+        sys.exit("Sprite PNG: " + str(error))

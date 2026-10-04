@@ -1,3 +1,4 @@
+#include "enemy_shot_sprite.h"
 #include <gb/gb.h>
 
 #include "game_config.h"
@@ -23,15 +24,7 @@ typedef struct
 
 static EnemyShot enemy_shots[ENEMY_SHOT_COUNT];
 
-static const uint8_t enemy_shot_tile[] = {
-    0x60, 0x60,
-    0xF0, 0xF0,
-    0xF0, 0xF0,
-    0x60, 0x60,
-    0x00, 0x00,
-    0x00, 0x00,
-    0x00, 0x00,
-    0x00, 0x00};
+
 
 static uint16_t integer_sqrt(uint16_t value)
 {
@@ -107,7 +100,7 @@ void enemy_shots_init(void)
     set_sprite_data(
         GFX_ENEMY_SHOT_TILE_ID,
         1,
-        enemy_shot_tile);
+        enemy_shot_sprite_tiles);
 
     for (i = 0; i < ENEMY_SHOT_COUNT; i++)
     {

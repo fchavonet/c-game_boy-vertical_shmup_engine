@@ -1,3 +1,4 @@
+#include "powerup_sprite.h"
 #include <gb/gb.h>
 
 #include "game_config.h"
@@ -17,15 +18,7 @@ static uint8_t powerup_active;
 static uint8_t movement_timer;
 static uint8_t kill_count;
 
-static const uint8_t powerup_tile[] = {
-    0xFF, 0xFF,
-    0x81, 0x81,
-    0xB9, 0xB9,
-    0xA5, 0xA5,
-    0xB9, 0xB9,
-    0xA1, 0xA1,
-    0x81, 0x81,
-    0xFF, 0xFF};
+
 
 void powerup_init(void)
 {
@@ -35,7 +28,7 @@ void powerup_init(void)
     movement_timer = 0;
     kill_count = 0;
 
-    set_sprite_data(GFX_POWERUP_TILE_ID, 1, powerup_tile);
+    set_sprite_data(GFX_POWERUP_TILE_ID, 1, powerup_sprite_tiles);
     set_sprite_tile(GFX_POWERUP_SPRITE_ID, GFX_POWERUP_TILE_ID);
     set_sprite_prop(GFX_POWERUP_SPRITE_ID, 0);
     move_sprite(GFX_POWERUP_SPRITE_ID, 0, 0);

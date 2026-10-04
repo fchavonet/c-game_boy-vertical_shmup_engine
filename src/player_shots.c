@@ -1,3 +1,4 @@
+#include "player_shot_sprite.h"
 #include <gb/gb.h>
 
 #include "graphics_layout.h"
@@ -26,15 +27,7 @@ static const uint8_t shot_offsets[3][3] = {
     {0, 6, 0},
     {0, 3, 6}};
 
-static const uint8_t shot_tile[] = {
-    0xC0, 0xC0,
-    0xC0, 0xC0,
-    0xC0, 0xC0,
-    0xC0, 0xC0,
-    0x00, 0x00,
-    0x00, 0x00,
-    0x00, 0x00,
-    0x00, 0x00};
+
 
 void shots_init(void)
 {
@@ -46,7 +39,7 @@ void shots_init(void)
     set_sprite_data(
         GFX_PLAYER_SHOT_TILE_ID,
         1,
-        shot_tile);
+        player_shot_sprite_tiles);
 
     for (i = 0; i < SHOT_COUNT; i++)
     {

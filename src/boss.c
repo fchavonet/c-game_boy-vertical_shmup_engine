@@ -1,3 +1,4 @@
+#include "boss_sprite.h"
 #include <gb/gb.h>
 
 #include "game_config.h"
@@ -59,15 +60,7 @@ static uint8_t action_salvos;
 static uint8_t active_phase;
 static uint8_t invalid_sequence_count;
 
-static const uint8_t boss_tile[] = {
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xFF, 0xFF};
+
 
 /*
  * Execute the attack selected by the current phase.
@@ -282,13 +275,13 @@ void boss_init(void)
     set_sprite_data(
         GFX_BOSS_FIRST_TILE_ID,
         GFX_BOSS_TILE_COUNT,
-        boss_tile);
+        boss_sprite_tiles);
 
     for (i = 0; i < GFX_BOSS_SPRITE_COUNT; i++)
     {
         sprite_id = GFX_BOSS_FIRST_SPRITE_ID + i;
 
-        set_sprite_tile(sprite_id, GFX_BOSS_FIRST_TILE_ID);
+        set_sprite_tile(sprite_id, (uint8_t)(GFX_BOSS_FIRST_TILE_ID + i));
         set_sprite_prop(sprite_id, 0);
         move_sprite(sprite_id, 0, 0);
     }
@@ -597,7 +590,7 @@ void boss_render(void)
         }
         else
         {
-            set_sprite_tile(sprite_id, GFX_BOSS_FIRST_TILE_ID);
+            set_sprite_tile(sprite_id, (uint8_t)(GFX_BOSS_FIRST_TILE_ID + i));
         }
 
         move_sprite(

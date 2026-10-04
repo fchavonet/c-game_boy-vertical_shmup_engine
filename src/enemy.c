@@ -1,3 +1,6 @@
+#include "enemy_spread_sprite.h"
+#include "enemy_resistant_sprite.h"
+#include "enemy_standard_sprite.h"
 #include <gb/gb.h>
 #include <stdint.h>
 
@@ -80,35 +83,11 @@ const EnemyDefinition enemy_spread = {
     200, /* Score value */
     GFX_ENEMY_SPREAD_TILE_ID};
 
-static const uint8_t enemy_tile[] = {
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xFF, 0xFF};
 
-static const uint8_t resistant_tile[] = {
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0xC3, 0xC3,
-    0xC3, 0xC3,
-    0xC3, 0xC3,
-    0xC3, 0xC3,
-    0xFF, 0xFF,
-    0xFF, 0xFF};
 
-static const uint8_t spread_tile[] = {
-    0x18, 0x18,
-    0x3C, 0x3C,
-    0x7E, 0x7E,
-    0xFF, 0xFF,
-    0xFF, 0xFF,
-    0x7E, 0x7E,
-    0x3C, 0x3C,
-    0x18, 0x18};
+
+
+
 
 /*
  * Execute the path selected by the spawn event.
@@ -276,17 +255,17 @@ void enemy_init(void)
     set_sprite_data(
         GFX_ENEMY_TILE_ID,
         1,
-        enemy_tile);
+        enemy_standard_sprite_tiles);
 
     set_sprite_data(
         GFX_ENEMY_RESISTANT_TILE_ID,
         1,
-        resistant_tile);
+        enemy_resistant_sprite_tiles);
 
     set_sprite_data(
         GFX_ENEMY_SPREAD_TILE_ID,
         1,
-        spread_tile);
+        enemy_spread_sprite_tiles);
 
     for (i = 0; i < ENEMY_COUNT; i++)
     {
