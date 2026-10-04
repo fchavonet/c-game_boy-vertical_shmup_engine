@@ -54,8 +54,7 @@
 #define GFX_HUD_BLANK_TILE_ID 128u
 #define GFX_HUD_SEPARATOR_TILE_ID 129u
 
-#define GFX_HUD_HEART_TOP_TILE_ID 130u
-#define GFX_HUD_HEART_BOTTOM_TILE_ID 131u
+/* Tiles 130 and 131 are available (former individual life icon). */
 
 #define GFX_HUD_FIRST_DIGIT_TILE_ID 132u
 #define GFX_HUD_DIGIT_TILE_COUNT 20u
@@ -69,6 +68,12 @@
 
 #define GFX_PAUSE_FIRST_TILE_ID 155u
 #define GFX_PAUSE_TILE_COUNT 12u
+
+/* Precomposed life strips; follows pause tiles 155..166.
+ * Up to 3 states x 5 columns x 2 rows for gaps from 0 to 8 pixels.
+ */
+#define GFX_HUD_LIVES_FIRST_TILE_ID 167u
+#define GFX_HUD_LIVES_TILE_CAPACITY 30u
 
 /*
  * Hardware sprite coordinate offsets.

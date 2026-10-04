@@ -2,15 +2,17 @@
 
 #include "graphics_layout.h"
 #include "hud.h"
+#include "player_sprite.h"
 
 #define HUD_MAX_LIVES 3
 #define HUD_SCORE_DIGITS 5
 
-#define HUD_GLYPH_COUNT 11
+#define HUD_GLYPH_COUNT 10
 #define HUD_GLYPH_HEIGHT 7
 #define HUD_CONTENT_Y 3
 
-#define HUD_HEART_COLUMN 1
+#define HUD_LIFE_COLUMN 1
+#define HUD_LIFE_COLUMN_STEP 2
 #define HUD_SCORE_COLUMN 14
 
 static uint8_t displayed_lives;
@@ -46,9 +48,6 @@ static const uint8_t hud_base_tiles[] = {
  * Digits are shifted right during tile generation.
  */
 static const uint8_t hud_glyphs[HUD_GLYPH_COUNT][HUD_GLYPH_HEIGHT] = {
-    /* Heart */
-    {0x48, 0xFC, 0xFC, 0xFC, 0x78, 0x78, 0x30},
-
     /* 0 */
     {0x38, 0x44, 0x4C, 0x54, 0x64, 0x44, 0x38},
 
@@ -149,36 +148,35 @@ void hud_init(void)
             {
                 pixels = hud_glyphs[glyph][row - HUD_CONTENT_Y];
 
-                if (glyph > 0)
-                {
-                    pixels >>= 2;
-                }
+                pixels >>= 2;
             }
 
             tile_data[row * 2] = pixels;
             tile_data[row * 2 + 1] = pixels;
         }
 
-        if (glyph == 0)
-        {
-            set_bkg_data(
-                GFX_HUD_HEART_TOP_TILE_ID,
-                1,
-                tile_data);
-
-            set_bkg_data(
-                GFX_HUD_HEART_BOTTOM_TILE_ID,
-                1,
-                tile_data + 16);
-        }
-        else
-        {
-            glyph_tile = (uint8_t)(GFX_HUD_FIRST_DIGIT_TILE_ID +
-                                   (glyph - 1u) * 2u);
-
-            set_bkg_data(glyph_tile, 2, tile_data);
-        }
+        glyph_tile = (uint8_t)(GFX_HUD_FIRST_DIGIT_TILE_ID + glyph * 2u);
+        set_bkg_data(glyph_tile, 2, tile_data);
     }
+
+    /* Reuse the player's two-bit pixels in the existing life-icon tiles.
+     * This runs only when preparing the HUD, never in the gameplay loop.
+     * Palette index 0 becomes the white HUD background.
+     */
+    for (i = 0; i < sizeof(tile_data); i++)
+    {
+        tile_data[i] = 0;
+    }
+
+    tile_data[0] = 0xFF;
+    tile_data[1] = 0xFF;
+
+    for (i = 0; i < sizeof(player_sprite_tiles); i++)
+    {
+        tile_data[HUD_CONTENT_Y * 2u + i] = player_sprite_tiles[i];
+    }
+
+    set_bkg_data(GFX_HUD_LIFE_TOP_TILE_ID, 2, tile_data);
 
     fill_bkg_rect(0, 0, 32, 32, GFX_HUD_BLANK_TILE_ID);
 
@@ -234,7 +232,7 @@ void hud_render(uint8_t lives, uint32_t score)
     uint8_t digit;
     uint8_t top_tile;
 
-    uint8_t heart_tiles[2];
+    uint8_t life_tiles[2];
     uint8_t score_tiles[HUD_SCORE_DIGITS * 2];
 
     uint32_t remaining;
@@ -245,21 +243,21 @@ void hud_render(uint8_t lives, uint32_t score)
     {
         for (i = 0; i < HUD_MAX_LIVES; i++)
         {
-            heart_tiles[0] = GFX_HUD_SEPARATOR_TILE_ID;
-            heart_tiles[1] = GFX_HUD_BLANK_TILE_ID;
+            life_tiles[0] = GFX_HUD_SEPARATOR_TILE_ID;
+            life_tiles[1] = GFX_HUD_BLANK_TILE_ID;
 
             if (i < lives)
             {
-                heart_tiles[0] = GFX_HUD_HEART_TOP_TILE_ID;
-                heart_tiles[1] = GFX_HUD_HEART_BOTTOM_TILE_ID;
+                life_tiles[0] = GFX_HUD_LIFE_TOP_TILE_ID;
+                life_tiles[1] = GFX_HUD_LIFE_BOTTOM_TILE_ID;
             }
 
             set_win_tiles(
-                HUD_HEART_COLUMN + i,
+                HUD_LIFE_COLUMN + i * HUD_LIFE_COLUMN_STEP,
                 0,
                 1,
                 2,
-                heart_tiles);
+                life_tiles);
         }
 
         displayed_lives = lives;
