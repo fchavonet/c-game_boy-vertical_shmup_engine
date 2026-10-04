@@ -3,6 +3,7 @@
 #include "game_config.h"
 #include "graphics_layout.h"
 #include "player.h"
+#include "player_sprite.h"
 #include "player_shots.h"
 #include "enemy.h"
 #include "enemy_shots.h"
@@ -46,15 +47,10 @@
 #define PLAYER_DESTRUCTION_DURATION \
     (PLAYER_EXPLOSION_DURATION + PLAYER_RESPAWN_DELAY)
 
-static const uint8_t player_tile[] = {
-    0x18, 0x18,
-    0x18, 0x18,
-    0x3C, 0x3C,
-    0x3C, 0x3C,
-    0x7E, 0x7E,
-    0x7E, 0x7E,
-    0xFF, 0xFF,
-    0xFF, 0xFF};
+/* This stage deliberately keeps one 8x8 hardware sprite. */
+#if player_sprite_TILE_COUNT != 1 || player_sprite_WIDTH != 8 || player_sprite_HEIGHT != 8
+#error Player asset must remain one 8x8 tile
+#endif
 
 static int16_t player_x;
 static int16_t player_y;
@@ -74,7 +70,7 @@ void player_init(void)
     weapon_level = 1;
     destruction_timer = 0;
 
-    set_sprite_data(GFX_PLAYER_TILE_ID, 1, player_tile);
+    set_sprite_data(GFX_PLAYER_TILE_ID, player_sprite_TILE_COUNT, player_sprite_tiles);
     set_sprite_tile(GFX_PLAYER_SPRITE_ID, GFX_PLAYER_TILE_ID);
     set_sprite_prop(GFX_PLAYER_SPRITE_ID, 0);
 }
