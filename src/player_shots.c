@@ -12,6 +12,11 @@
 #define SHOT_WIDTH 2
 #define SHOT_HEIGHT 4
 
+/* The 2-pixel laser starts at column 3 inside its 8x8 PNG.
+ * Shot coordinates remain the collision origin, not the tile origin.
+ */
+#define SHOT_SPRITE_X_OFFSET 3
+
 typedef struct
 {
     uint8_t x;
@@ -147,7 +152,7 @@ void shots_render(void)
         {
             move_sprite(
                 sprite_id,
-                shots[i].x + GFX_SPRITE_OFFSET_X,
+                shots[i].x + GFX_SPRITE_OFFSET_X - SHOT_SPRITE_X_OFFSET,
                 shots[i].y + GFX_SPRITE_OFFSET_Y);
         }
         else

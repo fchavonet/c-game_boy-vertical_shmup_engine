@@ -12,7 +12,19 @@
 #define HUD_CONTENT_Y 3
 
 #define HUD_LIFE_COLUMN 1
-#define HUD_LIFE_COLUMN_STEP 2
+/* Empty pixels between the 8-pixel-wide player icons, from 0 to 8. */
+#define HUD_LIFE_GAP_PX 2
+#define HUD_LIFE_WIDTH_PX (HUD_MAX_LIVES * 8 + (HUD_MAX_LIVES - 1) * HUD_LIFE_GAP_PX)
+#define HUD_LIFE_COLUMNS ((HUD_LIFE_WIDTH_PX + 7) / 8)
+#define HUD_LIFE_STATE_TILES (HUD_LIFE_COLUMNS * 2)
+
+#if HUD_LIFE_GAP_PX < 0 || HUD_LIFE_GAP_PX > 8
+#error HUD_LIFE_GAP_PX must be between 0 and 8
+#endif
+
+#if HUD_LIFE_STATE_TILES * HUD_MAX_LIVES > GFX_HUD_LIVES_TILE_CAPACITY
+#error Not enough reserved tiles for HUD lives
+#endif
 #define HUD_SCORE_COLUMN 14
 
 static uint8_t displayed_lives;
@@ -94,6 +106,79 @@ static void hud_lcd(void)
     }
 }
 
+/* Prepare 1-, 2- and 3-life strips while the new screen is hidden.
+ * During gameplay, changing lives only selects another tile map.
+ */
+static void hud_prepare_lives(void)
+{
+    uint8_t lives;
+    uint8_t column;
+    uint8_t icon;
+    uint8_t row;
+    uint8_t plane;
+    uint8_t i;
+    uint8_t x;
+    uint8_t icon_column;
+#if HUD_LIFE_GAP_PX % 8 != 0
+    uint8_t shift;
+#endif
+    uint8_t bits;
+    uint8_t first_tile;
+    uint8_t tile_data[32];
+
+    for (lives = 1; lives <= HUD_MAX_LIVES; lives++)
+    {
+        for (column = 0; column < HUD_LIFE_COLUMNS; column++)
+        {
+            for (i = 0; i < sizeof(tile_data); i++)
+            {
+                tile_data[i] = 0;
+            }
+            tile_data[0] = 0xFF;
+            tile_data[1] = 0xFF;
+
+            for (icon = 0; icon < lives; icon++)
+            {
+                x = icon * (8u + HUD_LIFE_GAP_PX);
+                icon_column = x >> 3;
+#if HUD_LIFE_GAP_PX % 8 == 0
+                if (column != icon_column)
+#else
+                shift = x & 7u;
+                if (column != icon_column &&
+                    (shift == 0 || column != icon_column + 1u))
+#endif
+                {
+                    continue;
+                }
+
+                for (row = 0; row < 8; row++)
+                {
+                    for (plane = 0; plane < 2; plane++)
+                    {
+                        bits = player_sprite_tiles[row * 2u + plane];
+#if HUD_LIFE_GAP_PX % 8 != 0
+                        if (column == icon_column)
+                        {
+                            bits >>= shift;
+                        }
+                        else
+                        {
+                            bits <<= 8u - shift;
+                        }
+#endif
+                        tile_data[(HUD_CONTENT_Y + row) * 2u + plane] |= bits;
+                    }
+                }
+            }
+
+            first_tile = (uint8_t)(GFX_HUD_LIVES_FIRST_TILE_ID +
+                (lives - 1u) * HUD_LIFE_STATE_TILES + column * 2u);
+            set_bkg_data(first_tile, 2, tile_data);
+        }
+    }
+}
+
 void hud_init(void)
 {
     uint8_t glyph;
@@ -159,24 +244,7 @@ void hud_init(void)
         set_bkg_data(glyph_tile, 2, tile_data);
     }
 
-    /* Reuse the player's two-bit pixels in the existing life-icon tiles.
-     * This runs only when preparing the HUD, never in the gameplay loop.
-     * Palette index 0 becomes the white HUD background.
-     */
-    for (i = 0; i < sizeof(tile_data); i++)
-    {
-        tile_data[i] = 0;
-    }
-
-    tile_data[0] = 0xFF;
-    tile_data[1] = 0xFF;
-
-    for (i = 0; i < sizeof(player_sprite_tiles); i++)
-    {
-        tile_data[HUD_CONTENT_Y * 2u + i] = player_sprite_tiles[i];
-    }
-
-    set_bkg_data(GFX_HUD_LIFE_TOP_TILE_ID, 2, tile_data);
+    hud_prepare_lives();
 
     fill_bkg_rect(0, 0, 32, 32, GFX_HUD_BLANK_TILE_ID);
 
@@ -232,34 +300,35 @@ void hud_render(uint8_t lives, uint32_t score)
     uint8_t digit;
     uint8_t top_tile;
 
-    uint8_t life_tiles[2];
+    uint8_t life_tiles[HUD_LIFE_STATE_TILES];
     uint8_t score_tiles[HUD_SCORE_DIGITS * 2];
 
     uint32_t remaining;
     uint16_t remainder;
     static const uint16_t divisors[4] = {1000u, 100u, 10u, 1u};
 
+    if (lives > HUD_MAX_LIVES)
+    {
+        lives = HUD_MAX_LIVES;
+    }
+
     if (lives != displayed_lives)
     {
-        for (i = 0; i < HUD_MAX_LIVES; i++)
+        for (i = 0; i < HUD_LIFE_COLUMNS; i++)
         {
-            life_tiles[0] = GFX_HUD_SEPARATOR_TILE_ID;
-            life_tiles[1] = GFX_HUD_BLANK_TILE_ID;
+            life_tiles[i] = GFX_HUD_SEPARATOR_TILE_ID;
+            life_tiles[i + HUD_LIFE_COLUMNS] = GFX_HUD_BLANK_TILE_ID;
 
-            if (i < lives)
+            if (lives != 0)
             {
-                life_tiles[0] = GFX_HUD_LIFE_TOP_TILE_ID;
-                life_tiles[1] = GFX_HUD_LIFE_BOTTOM_TILE_ID;
+                top_tile = (uint8_t)(GFX_HUD_LIVES_FIRST_TILE_ID +
+                    (lives - 1u) * HUD_LIFE_STATE_TILES + i * 2u);
+                life_tiles[i] = top_tile;
+                life_tiles[i + HUD_LIFE_COLUMNS] = top_tile + 1u;
             }
-
-            set_win_tiles(
-                HUD_LIFE_COLUMN + i * HUD_LIFE_COLUMN_STEP,
-                0,
-                1,
-                2,
-                life_tiles);
         }
 
+        set_win_tiles(HUD_LIFE_COLUMN, 0, HUD_LIFE_COLUMNS, 2, life_tiles);
         displayed_lives = lives;
     }
 
